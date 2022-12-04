@@ -22,7 +22,13 @@ import scipy.stats as st
 import math
 from PIL import Image ,ImageDraw,ImageFont
 #%%
-time_start = time.time() #開始計時
+#常數定義
+WIDTH = 1280
+HEIGHT = 720
+FPS = 5
+DRAW_PIE_FRAME_RATE = 50
+
+
 #次數迴圈未完成
 
 
@@ -33,7 +39,14 @@ mp_drawing = mp.solutions.drawing_utils#繪圖方法
 
 drawing_spec = mp_drawing.DrawingSpec(thickness=1, circle_radius=1)#繪圖參數設定
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+# 設置攝像頭設備分辨率
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, WIDTH)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
+# 設置攝像頭設備幀率,如不指定,默認600
+cap.set(cv2.CAP_PROP_FPS, FPS)
+
+#print("PFS="+str(cap.get(cv2.CAP_PROP_FPS)))
 #cap = cv2.VideoCapture('/C:/Users/to4/Desktop/111-1/hf/vidio/690566673.976856.mp4')
 #cap = cv2.VideoCapture('C:/Users/to4/Desktop/111-1/hf/vidio/1.mp4')
 
@@ -99,6 +112,8 @@ last_text=""#最後圓餅圖顯示的文字
 
 X_angle = []
 Y_angle = []
+
+time_start = time.time() #開始計時
 while cap.isOpened():
     #（success：image有東西就會回傳true 沒東西就是false） （image：一開始的那個影像格）
     success, image = cap.read()
@@ -118,6 +133,7 @@ while cap.isOpened():
         print('  注視觀眾加分：'+str(c_look)+'次/共'+str(plus)+'分')
         print('基礎分：'+str(grade_base))
         print('總分：'+str(grade_all))
+        print('總解析針數'+str(cc))
         #print(judgement_type_p1)
         
         break
@@ -434,7 +450,7 @@ while cap.isOpened():
     
         cv2.putText(image,"Deduct points!!", (int(200*width_ratio),int(300*width_ratio)),cv2.FONT_HERSHEY_SIMPLEX, 4*width_ratio, (138, 42, 226), 3)
     
-    if cc%20==0:
+    if cc%DRAW_PIE_FRAME_RATE==0:
         # 309～319即時顯示變化的圓餅圖
         y = np.array([len(turn_right), len(turn_left), len(turn_up), len(turn_foward), len(turn_down),len(no_face)])
         #len() 括弧裡面的字元長度
