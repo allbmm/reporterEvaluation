@@ -20,14 +20,14 @@ mp_drawing = mp.solutions.drawing_utils#繪圖方法
 
 drawing_spec = mp_drawing.DrawingSpec(thickness=1, circle_radius=1)#繪圖參數設定
 
-#cap = cv2.VideoCapture(0)
-cap = cv2.VideoCapture('/Users/bingjun/Downloads/程好的.mp4')
+cap = cv2.VideoCapture(0)
+#cap = cv2.VideoCapture('/Users/bingjun/Downloads/程好的.mp4')
 #cap = cv2.VideoCapture('C:/Users/to4/Desktop/111-1/hf/vidio/IMG_9422.mp4')
 fpss = cap.get(cv2.CAP_PROP_FPS)
-cap.set(cv2.CAP_PROP_POS_FRAMES, 30)
-
-	# 影片的幀率FPS
+cap.set(cv2.CAP_PROP_POS_FRAMES, 30)# 影片的幀率FPS
 # total_frame = cap.get(cv2.CAP_PROP_FRAME_COUNT)	# 影片的總幀數
+	
+
 
 
 turn_right = []
@@ -65,7 +65,7 @@ grade_min=0#運作過程中的變動扣分
 grade_plus=0#過程中的變動加分
 plus=0#變動加分加120度的分數
 yprime=0#前一次的迴圈的y
-xprime=0
+
 
 pre_p1=0#前一次的鼻頭座標
 nose_distance=0#鼻頭的位移、轉動量值
@@ -177,37 +177,22 @@ while cap.isOpened():
             #120度(y=+-7)內視線的緩慢掃視：未試出
             #y 轉越左邊數值越負，越右邊越正，中間是0
             
-            # if y<5+face_y and y>-5+face_y: #把臉部鎖定在120度的範圍之內
-                
-            #     if  -0.3>=yprime-y>-2 :#中間偏右的移動量 or 左往中間移動量
-            #         deltay_right=deltay_right+1
-                    
-            #         print(f'deltay_right: {(deltay_right)}')
-                   
-            #     elif 0.3<=yprime-y<2 :#中間偏左移動量 or 右往中間移動量
-            #         deltay_left=deltay_left+1
-            #         print(f'deltay_left: {(deltay_left)}') 
-                 
-            #     elif yprime-y == 0: 
-            #             deltay=deltay+1 
-                        
-            # round(y,2)
-            # cv2.putText(image, f'yprime: {round(yprime,2)}', (int(20*width_ratio),int(250*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
-            # cv2.putText(image, f'yprime-y = : {round((yprime - y),2)}', (int(20*width_ratio),int(300*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
-            # cv2.putText(image, f'deltay_right: {(deltay_right)}', (int(20*width_ratio),int(150*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
-            # cv2.putText(image, f'deltay_left: {(deltay_left)}', (int(500*width_ratio),int(150*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
-            
-            # if deltay_left>=10 and deltay_right>=10 and (5<=deltay_right-deltay_left<=9 or -5>=deltay_right-deltay_left>=-9):
-            #    deltay_left=0
-            #    deltay_right=0
-            #    delta_min += 1
-            #    look120_loop=round(delta_min/cc,2)
-            #    print('120度的範圍次數：'+str(delta_min))
-            # cv2.putText(image, f'120/all loop=: {look120_loop}', (int(20*width_ratio),int(450*width_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
+            if y<5+face_y and y>-5+face_y: #把臉部鎖定在120度的範圍之內
+               if 3>=nose_distance>=1: #頭部轉動位移在1～3度內
+                 delta_min += 1
+                 look120_loop=round(delta_min/cc,2)
+                 print('120度的範圍次數：'+str(delta_min))
+            cv2.putText(image, f'120/all loop= {look120_loop}', (int(20*width_ratio),int(450*width_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
+         
+            #把頭部轉向限制在一個框框內
             if y<2 and y>=-2 and x<=3 and x>=-2:
                 attention_look +=1
-                cv2.putText(image, f'attention ratio = : {round(attention_look/cc,2)}', (int(20*width_ratio),int(350*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
-               
+                if attention_look>=5: #設定一個時間，注視超過5次的迴圈次數
+                    cv2.putText(image, f'attention ratio =  {round(attention_look/cc,2)}', (int(20*width_ratio),int(350*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
+                else :
+                    attention_look = 0
+                    cv2.putText(image, 'not attention', (int(20*width_ratio),int(350*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
+   
             # See where the user's head tilting
             if y < -6+face_y:
                 text = "Looking Left"
@@ -303,7 +288,6 @@ while cap.isOpened():
             nose_3d_projection, jacobian = cv2.projectPoints(nose_3d, rot_vec, trans_vec, cam_matrix, dist_matrix)
 
             p1 = (int(nose_2d[0]), int(nose_2d[1]))#鼻頭（x，y）座標
-            print(p1)
             p2 = (int(nose_2d[0] + y * 10  ) , int(nose_2d[1]- x * 10))
         
             cv2.line(image, p1, p2, (255, 255,0), 3)    
@@ -314,12 +298,9 @@ while cap.isOpened():
             #cv2.line（要放上去的地方，起始座標，結束座標，（藍，綠，紅），線條寬度）
             if pre_p1!=0:
                 nose_distance=round(np.abs(pre_p1-p1),2)
-            
                 print(nose_distance)
                 cv2.putText(image, f'nose_dis= {float(nose_distance)}', (int(500*width_ratio),int(100*width_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 2*width_ratio, (0, 255, 0), 2)
-                if nose_distance>=20:
-                    
-                    cv2.putText(image, 'Good! Walk around!', (int(400*width_ratio),int(50*width_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 2*width_ratio, (0, 255, 0), 2)
+                if nose_distance>=20: cv2.putText(image, 'Good! Walk around!', (int(400*width_ratio),int(50*width_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 2*width_ratio, (0, 255, 0), 2)
             cv2.putText(image, text, (int(20*width_ratio),int(50*width_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 2*width_ratio, (0, 255, 0), 2)
             #cv2.putText(要放文字的視窗，要放的文字，要放置的座標，字體（不用理他），字體大小，rgb的顏色，字體粗細)
             cv2.putText(image, "x: " + str(np.round(x,2)), (int(1100*width_ratio), int(50*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1*width_ratio, (0, 0, 255), 2)
@@ -430,7 +411,7 @@ plt.pie(y,
         colors=["#65a479", "#d5695d", "#5d8ca8", "#FF5151", "#a564c9","#FFFFBB"], # 设置饼图颜色
         explode=(0, 0, 0, 0, 0,0), # 第二部分突出显示，值越大，距离中心越远
         autopct='%.2f%%')
-plt.title("Final Result"+"\namong of grade ="+str(grade_all)+" \n\n\n"+last_text)
+plt.title("Final Result")
 #plt.title("among of grade ="+str(grade_all),loc="center")
 #plt.savefig('C:/Users/to4/Desktop/111-1/hf/data/headpose_Pie_chart.jpg') #綠色這裡要改成自己要存的地方資料夾
 plt.show()
