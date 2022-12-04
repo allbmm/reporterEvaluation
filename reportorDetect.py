@@ -176,33 +176,34 @@ while cap.isOpened():
             Y_angle.append(y)
             #120度(y=+-7)內視線的緩慢掃視：未試出
             #y 轉越左邊數值越負，越右邊越正，中間是0
-            if y<5+face_y and y>-5+face_y: #把臉部鎖定在120度的範圍之內
-                
-                if  -0.3>=yprime-y>-2 :#中間偏右的移動量 or 左往中間移動量
-                    deltay_right=deltay_right+1
-                    
-                    print(f'deltay_right: {(deltay_right)}')
-                   
-                elif 0.3<=yprime-y<2 :#中間偏左移動量 or 右往中間移動量
-                    deltay_left=deltay_left+1
-                    print(f'deltay_left: {(deltay_left)}') 
-                 
-                elif yprime-y == 0: 
-                        deltay=deltay+1 
-                        
-            round(y,2)
-            cv2.putText(image, f'yprime: {round(yprime,2)}', (int(20*width_ratio),int(250*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
-            cv2.putText(image, f'yprime-y = : {round((yprime - y),2)}', (int(20*width_ratio),int(300*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
-            cv2.putText(image, f'deltay_right: {(deltay_right)}', (int(20*width_ratio),int(150*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
-            cv2.putText(image, f'deltay_left: {(deltay_left)}', (int(500*width_ratio),int(150*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
             
-            if deltay_left>=10 and deltay_right>=10 and (5<=deltay_right-deltay_left<=9 or -5>=deltay_right-deltay_left>=-9):
-               deltay_left=0
-               deltay_right=0
-               delta_min += 1
-               look120_loop=round(delta_min/cc,2)
-               print('120度的範圍次數：'+str(delta_min))
-            cv2.putText(image, f'120/all loop=: {look120_loop}', (int(20*width_ratio),int(450*width_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
+            # if y<5+face_y and y>-5+face_y: #把臉部鎖定在120度的範圍之內
+                
+            #     if  -0.3>=yprime-y>-2 :#中間偏右的移動量 or 左往中間移動量
+            #         deltay_right=deltay_right+1
+                    
+            #         print(f'deltay_right: {(deltay_right)}')
+                   
+            #     elif 0.3<=yprime-y<2 :#中間偏左移動量 or 右往中間移動量
+            #         deltay_left=deltay_left+1
+            #         print(f'deltay_left: {(deltay_left)}') 
+                 
+            #     elif yprime-y == 0: 
+            #             deltay=deltay+1 
+                        
+            # round(y,2)
+            # cv2.putText(image, f'yprime: {round(yprime,2)}', (int(20*width_ratio),int(250*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
+            # cv2.putText(image, f'yprime-y = : {round((yprime - y),2)}', (int(20*width_ratio),int(300*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
+            # cv2.putText(image, f'deltay_right: {(deltay_right)}', (int(20*width_ratio),int(150*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
+            # cv2.putText(image, f'deltay_left: {(deltay_left)}', (int(500*width_ratio),int(150*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
+            
+            # if deltay_left>=10 and deltay_right>=10 and (5<=deltay_right-deltay_left<=9 or -5>=deltay_right-deltay_left>=-9):
+            #    deltay_left=0
+            #    deltay_right=0
+            #    delta_min += 1
+            #    look120_loop=round(delta_min/cc,2)
+            #    print('120度的範圍次數：'+str(delta_min))
+            # cv2.putText(image, f'120/all loop=: {look120_loop}', (int(20*width_ratio),int(450*width_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
             if y<2 and y>=-2 and x<=3 and x>=-2:
                 attention_look +=1
                 cv2.putText(image, f'attention ratio = : {round(attention_look/cc,2)}', (int(20*width_ratio),int(350*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
@@ -311,8 +312,6 @@ while cap.isOpened():
             print(f'p1y:{p1}')
             print(f'prep1y:{pre_p1}')
             #cv2.line（要放上去的地方，起始座標，結束座標，（藍，綠，紅），線條寬度）
-            # Add the text on the image
-            #cv2ImgAddText(image, "向上看", 200, 200, (255, 255, 0), 20)
             if pre_p1!=0:
                 nose_distance=round(np.abs(pre_p1-p1),2)
             
@@ -322,7 +321,6 @@ while cap.isOpened():
                     
                     cv2.putText(image, 'Good! Walk around!', (int(400*width_ratio),int(50*width_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 2*width_ratio, (0, 255, 0), 2)
             cv2.putText(image, text, (int(20*width_ratio),int(50*width_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 2*width_ratio, (0, 255, 0), 2)
-            #cv2.putText(image, str(grade/100), (20, 300), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 215, 0), 2)
             #cv2.putText(要放文字的視窗，要放的文字，要放置的座標，字體（不用理他），字體大小，rgb的顏色，字體粗細)
             cv2.putText(image, "x: " + str(np.round(x,2)), (int(1100*width_ratio), int(50*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1*width_ratio, (0, 0, 255), 2)
             cv2.putText(image, "y: " + str(np.round(y,2)), (int(1100*width_ratio), int(100*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1*width_ratio, (0, 0, 255), 2)
@@ -354,33 +352,24 @@ while cap.isOpened():
         #     grade = grade+plus
         #     cv2.putText(image,"kou fen!!", (400,600),cv2.FONT_HERSHEY_SIMPLEX, 3, (138, 42, 226), 3)
         pre_p1=p1
-        yprime = y
-        #xprime = x
-        print(f'yprime={str(yprime)}')
-        #print(f'xprime={str(xprime)}')
 
     else:
         #程式到這裡代表沒有偵測到臉
         grade_variable=grade_min+plus
         no_face_number = no_face_number +1 
-        #print("no face")
-        #print(no_face_number)
         no_face.append(no_face_number)
         cv2.putText(image,"Current variable:"+str(round(grade_variable,2)), (int(150*width_ratio), int(200*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 3*width_ratio, (138, 43, 226), 3)   
            
         cv2.putText(image, "no face!!!" , (int(300*width_ratio), int(100*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 4, (138, 43, 226), 10)
-        #cv2.putText(image, "plus = 0" , (300, 200), cv2.FONT_HERSHEY_SIMPLEX, 4, (138, 43, 226), 10)
-        #cv2.putText(image, "Grade = " + str(grade/100) , (300, 350), cv2.FONT_HERSHEY_SIMPLEX, 3, (138, 43, 226), 10)
         noface_time_end=time.time()
         cv2.putText(image,"time:"+str(int(noface_time_end-noface_time_start))+"s", (int(300*width_ratio), int(500*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 3*width_ratio, (138, 43, 226), 3)
    
     if noface_time_end - noface_time_start> 3:#如果累積（沒有找到臉）大於3秒那麼就會扣分
-        #time.sleep(0.2)
+        
         plus = -0.01
         grade_min = grade_min + plus
         grade_min = round(grade_min, 3)
-        #cv2.putText(image,leiji+"s  "+ str(grade/100), (300, 600), cv2.FONT_HERSHEY_SIMPLEX, 3, (138, 43, 226), 3)
-    
+        
         cv2.putText(image,"Deduct points!!", (int(200*width_ratio),int(300*height_ratio)),cv2.FONT_HERSHEY_SIMPLEX, 4*width_ratio, (138, 42, 226), 3)
     
     
@@ -413,14 +402,7 @@ while cap.isOpened():
         print("fpss="+str(fpss))
         
         break
- #       cv2.putText(image, '120 add:5', (int(20*width_ratio),int(450*width_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
- 
-    grade_all=grade_variable+grade_base#算總分
-    grade_all=round(grade_all,3)
-    if grade_all>60:
-        last_text="Good Presenter!"
-    else:
-        last_text="Bad Presenter!"
+ #       
 XX_angle = pd.DataFrame(X_angle)
 YY_angle = pd.DataFrame(Y_angle)
 XY_angle = pd.DataFrame(XX_angle)
