@@ -24,7 +24,7 @@ cap = cv2.VideoCapture(0)
 #cap = cv2.VideoCapture('/Users/bingjun/Downloads/程好的.mp4')
 #cap = cv2.VideoCapture('C:/Users/to4/Desktop/111-1/hf/vidio/IMG_9422.mp4')
 fpss = cap.get(cv2.CAP_PROP_FPS)
-cap.set(cv2.CAP_PROP_POS_FRAMES, 30)# 影片的幀率FPS
+#cap.set(cv2.CAP_PROP_POS_FRAMES, 60)# 影片的幀率FPS
 # total_frame = cap.get(cv2.CAP_PROP_FRAME_COUNT)	# 影片的總幀數
 	
 
@@ -49,9 +49,7 @@ face_x=3.5
 face_y=0
 face_z=0
 
-deltay_right=0
-deltay_left=0
-deltay=0
+
 
 width_ratio=cap.get(cv2.CAP_PROP_FRAME_WIDTH)/1280
 height_ratio=cap.get(cv2.CAP_PROP_FRAME_HEIGHT)/720
@@ -59,6 +57,8 @@ height_ratio=cap.get(cv2.CAP_PROP_FRAME_HEIGHT)/720
 print(width_ratio)
 
 cc=0#總共迴圈的次數
+cc_for_haveface=0#有臉的計數
+no_atten=0
 grade_all=0#所有總分，加扣分和基本分加起來
 grade_base=0#基本分數
 grade_min=0#運作過程中的變動扣分
@@ -66,7 +66,7 @@ grade_plus=0#過程中的變動加分
 plus=0#變動加分加120度的分數
 yprime=0#前一次的迴圈的y
 
-
+noface_time=0
 pre_p1=0#前一次的鼻頭座標
 nose_distance=0#鼻頭的位移、轉動量值
 
@@ -119,20 +119,19 @@ while cap.isOpened():
 
     if results.multi_face_landmarks:
         noface_time_start=time.time() 
-        
+        cc_for_haveface+=1
         noface_time_end=0#把累積沒臉的時間重新計算
         
         
         
         for face_landmarks in results.multi_face_landmarks:
             for idx, lm in enumerate(face_landmarks.landmark):
+                #idx=1,xyz=?;idx=2,xyz=?
                 if idx == 33 or idx == 263 or idx == 1 or idx == 61 or idx == 291 or idx == 199:
                     if idx == 1:
                         nose_2d = (lm.x * img_w, lm.y * img_h)
                         nose_3d = (lm.x * img_w, lm.y * img_h, lm.z * 3000 )
                    
-                        
-
                     x, y = int(lm.x * img_w), int(lm.y * img_h)
 
                     # Get the 2D Coordinates
@@ -177,7 +176,7 @@ while cap.isOpened():
             #120度(y=+-7)內視線的緩慢掃視：未試出
             #y 轉越左邊數值越負，越右邊越正，中間是0
             
-            if y<5+face_y and y>-5+face_y: #把臉部鎖定在120度的範圍之內
+            if -7<y<7: #把臉部鎖定在120度的範圍之內
                if 3>=nose_distance>=1: #頭部轉動位移在1～3度內
                  delta_min += 1
                  look120_loop=round(delta_min/cc,2)
@@ -185,21 +184,24 @@ while cap.isOpened():
             cv2.putText(image, f'120/all loop= {look120_loop}', (int(20*width_ratio),int(450*width_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
          
             #把頭部轉向限制在一個框框內
-            if y<2 and y>=-2 and x<=3 and x>=-2:
+        
+            if -5<y<5 and 10>x>1:
                 attention_look +=1
-                if attention_look>=5: #設定一個時間，注視超過5次的迴圈次數
-                    cv2.putText(image, f'attention ratio =  {round(attention_look/cc,2)}', (int(20*width_ratio),int(350*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
-                else :
-                    attention_look = 0
-                    cv2.putText(image, 'not attention', (int(20*width_ratio),int(350*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
-   
+                if attention_look>=5 : #設定一個時間，注視超過5次的迴圈次數
+                    cv2.putText(image, f'attention =  {round((attention_look-4)/10,0)} times', (int(20*width_ratio),int(350*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
+                    
+            else:
+                no_atten+=1
+                if no_atten>100: #如果頭部不在這個取景框中一段時間（回頭打個噴嚏之類的時間很短就不會進入這個循環，因此會繼續累積注視的次數）
+                   attention_look=0#重新計算注視次數，代表離開太久了
+                   cv2.putText(image, 'not attention too long', (int(20*width_ratio),int(350*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 2*width_ratio, (0,0,255), 2)
+       
             # See where the user's head tilting
             if y < -6+face_y:
                 text = "Looking Left"
                 print("Looking Left")
                 num1=num1+1
                 direction_time_end=time.time()
-                print(num1)
                 turn_left.append(num1)
                 
                 if judgement_type!=1:#如果之前的面部朝向不是向左這個類型就重新開始累積向前的時間
@@ -213,7 +215,6 @@ while cap.isOpened():
                 print("Looking Right")
                 num2=num2+1
                 direction_time_end=time.time()
-                print(num2)
                 turn_right.append(num2)
                 
                 if judgement_type!=2:#如果之前的面部朝向不是向右這個類型就重新開始累積向前的時間
@@ -228,8 +229,6 @@ while cap.isOpened():
                 print("Looking Down")
                 num3=num3+1
                 direction_time_end=time.time()
-                #grade = grade + minues
-                print(num3)
                 turn_down.append(num3)
                 if judgement_type!=3:#如果之前的面部朝向不是向下這個類型就重新開始累積向前的時間
                     direction_time_start=time.time()#開始進行朝向下的時間計時
@@ -242,7 +241,6 @@ while cap.isOpened():
                 print("Looking Up")
                 num4=num4+1
                 direction_time_end=time.time()
-                print(num4)
                 turn_up.append(num4)
                 
                 if judgement_type!=4:#如果之前的面部朝向不是向上這個類型就重新開始累積向上的時間
@@ -257,7 +255,6 @@ while cap.isOpened():
                print("Forward")
                num5=num5+1
                direction_time_end=time.time()
-               print(num5)
                turn_foward.append(num5)
                
                if direction_time_end-direction_time_start > 2 and direction_time_end-direction_time_start < 10:
@@ -276,8 +273,7 @@ while cap.isOpened():
                 
                 
             if direction_time_end-direction_time_start > 10:#如果朝向一個方向的時間>10秒
-                  grade_min= grade_min - 0.005  
-                  grade_min = round(grade_min, 3)
+                 
                   direction_time=round((direction_time_end-direction_time_start),2)#將臉部朝向同方向的時間取到小數點第二位
                   cv2.putText(image, "the same direction time : "+str(direction_time)+"s", (int(20*width_ratio), int(650*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 2*width_ratio, (255, 215, 0), 2)
              
@@ -293,12 +289,9 @@ while cap.isOpened():
             cv2.line(image, p1, p2, (255, 255,0), 3)    
             #p1=float(''.join(map(str, p1)))/1000
             p1= float(nose_2d[1])
-            print(f'p1y:{p1}')
-            print(f'prep1y:{pre_p1}')
             #cv2.line（要放上去的地方，起始座標，結束座標，（藍，綠，紅），線條寬度）
             if pre_p1!=0:
                 nose_distance=round(np.abs(pre_p1-p1),2)
-                print(nose_distance)
                 cv2.putText(image, f'nose_dis= {float(nose_distance)}', (int(500*width_ratio),int(100*width_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 2*width_ratio, (0, 255, 0), 2)
                 if nose_distance>=20: cv2.putText(image, 'Good! Walk around!', (int(400*width_ratio),int(50*width_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 2*width_ratio, (0, 255, 0), 2)
             cv2.putText(image, text, (int(20*width_ratio),int(50*width_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 2*width_ratio, (0, 255, 0), 2)
@@ -314,10 +307,6 @@ while cap.isOpened():
         
         
         fps = 1 / totalTime
-        #plus=round(grade_plus+plus120,3)
-        grade_variable=grade_min+plus
-        cv2.putText(image, f'plus point: {float(plus)}', (int(20*width_ratio),int(600*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
-        cv2.putText(image, f'base grade: {float(grade_base)}', (int(20*width_ratio),int(500*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
         cv2.putText(image, f'FPS: {int(fps)}', (int(1000*width_ratio),int(700*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
         
       
@@ -327,31 +316,22 @@ while cap.isOpened():
                     connections=mp_face_mesh.FACEMESH_CONTOURS,
                     landmark_drawing_spec=drawing_spec,
                     connection_drawing_spec=drawing_spec)
-        # if lei> 3:#如果累積（沒有找到臉）大於2秒那麼就會扣分
-        #     time.sleep(0.2)
-        #     plus = -1
-        #     grade = grade+plus
-        #     cv2.putText(image,"kou fen!!", (400,600),cv2.FONT_HERSHEY_SIMPLEX, 3, (138, 42, 226), 3)
         pre_p1=p1
-
+        #從noface狀態轉換到有face狀態後，計算有face維持多久，若有足夠時間，即重新計算noface_time
+        if noface_time!=0 and cc_for_haveface >= 100: 
+            noface_time=0
     else:
         #程式到這裡代表沒有偵測到臉
-        grade_variable=grade_min+plus
         no_face_number = no_face_number +1 
+        noface_time+=1
         no_face.append(no_face_number)
-        cv2.putText(image,"Current variable:"+str(round(grade_variable,2)), (int(150*width_ratio), int(200*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 3*width_ratio, (138, 43, 226), 3)   
-           
         cv2.putText(image, "no face!!!" , (int(300*width_ratio), int(100*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 4, (138, 43, 226), 10)
         noface_time_end=time.time()
-        cv2.putText(image,"time:"+str(int(noface_time_end-noface_time_start))+"s", (int(300*width_ratio), int(500*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 3*width_ratio, (138, 43, 226), 3)
+        if noface_time_start!=0:
+           cv2.putText(image,"time:"+str(int(noface_time_end-noface_time_start))+"s", (int(300*width_ratio), int(500*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 3*width_ratio, (138, 43, 226), 3)
    
-    if noface_time_end - noface_time_start> 3:#如果累積（沒有找到臉）大於3秒那麼就會扣分
-        
-        plus = -0.01
-        grade_min = grade_min + plus
-        grade_min = round(grade_min, 3)
-        
-        cv2.putText(image,"Deduct points!!", (int(200*width_ratio),int(300*height_ratio)),cv2.FONT_HERSHEY_SIMPLEX, 4*width_ratio, (138, 42, 226), 3)
+        if noface_time>200:#累積（沒有找到臉）大於迴圈次數200
+            cv2.putText(image,"no face too long!!", (int(200*width_ratio),int(300*height_ratio)),cv2.FONT_HERSHEY_SIMPLEX, 4*width_ratio, (138, 42, 226), 3)
     
     
     cv2.imshow('Head Pose Estimation', image)
@@ -363,7 +343,7 @@ while cap.isOpened():
         plt.pie(y,
                 labels=['Looking Right','Looking Left','Looking Up','Forward','Looking Down','no_face'], # 设置饼图标签
                 colors=["#65a479", "#d5695d", "#5d8ca8", "#FF5151", "#a564c9","#FFFFBB"], # 设置饼图颜色
-                explode=(0, 0, 0, 0, 0,0), # 第二部分突出显示，值越大，距离中心越远
+                explode=(0, 0, 0, 0, 0, 0), # 第二部分突出显示，值越大，距离中心越远
                 autopct='%.2f%%')
     
         plt.title("Head Pose Estimation"+str(int(cc/5)))
@@ -375,11 +355,7 @@ while cap.isOpened():
 
     
     if cv2.waitKey(1) & 0xFF == 27:
-        print(grade_base)
-        print(grade_min)
-        print(grade_plus)
-        print(plus)
-        print(grade_all)
+        
         print("fpss="+str(fpss))
         
         break
