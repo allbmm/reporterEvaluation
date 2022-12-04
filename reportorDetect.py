@@ -463,6 +463,7 @@ while cap.isOpened():
         cv2.putText(image,"Deduct points!!", (int(200*width_ratio),int(300*height_ratio)),cv2.FONT_HERSHEY_SIMPLEX, 4*width_ratio, (138, 42, 226), 3)
     
     if cc%20==0:
+    #if cc%5==0:
         # 309～319即時顯示變化的圓餅圖
         y = np.array([len(turn_right), len(turn_left), len(turn_up), len(turn_foward), len(turn_down),len(no_face)])
         #len() 括弧裡面的字元長度
