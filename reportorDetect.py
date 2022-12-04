@@ -259,9 +259,6 @@ while cap.isOpened():
                
                if direction_time_end-direction_time_start > 2 and direction_time_end-direction_time_start < 10:
                    
-                    #time.sleep(0.5)
-                    grade_plus = grade_plus + 0.005
-                    grade_plus = round(grade_plus, 3)
                     direction_time = round(direction_time_end-direction_time_start, 0)
                     cv2.putText(image, "grade plus time : "+str(direction_time)+"s", (int(20*width_ratio),int(650*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 2*width_ratio, (255, 215, 0), 2)
                #cv2.putText(image,str(lei)+"    "+str(int(leiji_start)), (400,600),cv2.FONT_HERSHEY_SIMPLEX, 1, (138, 42, 226), 2)
