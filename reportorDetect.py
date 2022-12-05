@@ -72,27 +72,19 @@ cal_longforward=0
 cal_120add=0
 cal_attenlook=0
 
-
-
 width_ratio=cap.get(cv2.CAP_PROP_FRAME_WIDTH)/1280
 height_ratio=cap.get(cv2.CAP_PROP_FRAME_HEIGHT)/720
-print(width_ratio)
 
 cc=0#總共迴圈的次數
 cc_for_haveface=0#有臉的計數
 no_atten=0
 grade_all=0#所有總分，加扣分和基本分加起來
 grade_base=0#基本分數
-grade_min=0#運作過程中的變動扣分
 
 min_for_noface=0#單獨計算noface的扣分分數
 min_for_atten=0#注視太長的扣分分數
 plus_for120=0#120加分
 plus_cal_attenlook=0 #注視恰當(注視觀眾)的加分分數
-
-#plus_foratten=0#多餘
-#grade_plus=0#過程中的變動加分 多餘
-
 
 noface_time=0
 pre_p1=0#前一次的鼻頭座標
@@ -101,6 +93,7 @@ nose_distance=0#鼻頭的位移、轉動量值
 delta_min=0#數有多少次的緩慢移動頭部
 look120_loop=0#到目前為止，delta_min的比例
 attention_look=0#注視次數累積
+
 judgement_type=0#0:什麼都沒有；12345:臉部朝向一個方向的累積
 pre_judgement_type_addmode=0#之前的判斷
 judgement_type_addmode=0#判斷是否為同個加分模式
@@ -123,13 +116,13 @@ while cap.isOpened():
     
     if success==False or cv2.waitKey(5) & 0xFF == 27:
         print('扣分變動：'+str(min_for_atten+min_for_noface))
-        print('  noface扣分：'+str(cal_noface)+'次/n共'+str(min_for_noface)+'分')
+        print('  noface扣分：'+str(cal_noface)+'次/共'+str(min_for_noface)+'分')
         print('  long time one way 扣分：'+str(cal_long_way)+'次/n共'+str(min_for_atten)+'分')
-        print('    Left：'+str(cal_longleft)+'次/n共'+str(min_for_atten)+'分')
-        print('    Right：'+str(cal_longright)+'次/n共'+str(min_for_atten)+'分')
-        print('    Up：'+str(cal_longup)+'次/n共'+str(min_for_atten)+'分')
-        print('    Down：'+str(cal_longdown)+'次/n共'+str(min_for_atten)+'分')
-        print('    Forward：'+str(cal_longforward)+'次/n共'+str(min_for_atten)+'分')
+        print('    Left：'+str(cal_longleft)+'次/共'+str(min_for_atten)+'分')
+        print('    Right：'+str(cal_longright)+'次/共'+str(min_for_atten)+'分')
+        print('    Up：'+str(cal_longup)+'次/共'+str(min_for_atten)+'分')
+        print('    Down：'+str(cal_longdown)+'次/共'+str(min_for_atten)+'分')
+        print('    Forward：'+str(cal_longforward)+'次/共'+str(min_for_atten)+'分')
         print('加分變動：'+str(plus_cal_attenlook+plus_for120))
         print('  120掃視加分：'+str(cal_120add)+'次/共'+str(plus_for120)+'分')
         print('  注視觀眾加分：'+str(cal_attenlook)+'次/共'+str(plus_cal_attenlook)+'分')
@@ -285,6 +278,7 @@ while cap.isOpened():
                    attention_look=0#重新計算注視次數，代表離開太久了
                    no_atten=0#no atten 歸零
                    cv2.putText(image, 'not attention too long', (int(20*width_ratio),int(350*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 2*width_ratio, (0,0,255), 2)
+            
        
             # See where the user's head tilting
             if y < -6+face_y:
@@ -442,7 +436,7 @@ while cap.isOpened():
 
     else:
         #程式到這裡代表沒有偵測到臉
-        
+        judgement_type=0
         grade_variable=min_for_noface+min_for_atten+plus_cal_attenlook+plus_for120
         no_face_number = no_face_number +1 
         noface_time+=1
