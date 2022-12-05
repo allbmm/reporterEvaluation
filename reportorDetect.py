@@ -23,7 +23,7 @@ import math
 from PIL import Image ,ImageDraw,ImageFont
 #%%
 time_start = time.time() #開始計時
-
+chek=0
 
 mp_face_mesh = mp.solutions.face_mesh
 face_mesh = mp_face_mesh.FaceMesh(min_detection_confidence=0.5, min_tracking_confidence=0.5)
@@ -37,7 +37,6 @@ cap = cv2.VideoCapture(0)
 #cap = cv2.VideoCapture('C:/Users/to4/Desktop/111-1/hf/vidio/IMG_9422.mp4')
 #cap = cv2.VideoCapture('/C:/Users/to4/Desktop/111-1/hf/vidio/690566673.976856.mp4')
 #cap = cv2.VideoCapture('C:/Users/to4/Desktop/111-1/hf/vidio/1.mp4')
-
 
 turn_right = []
 turn_left = []
@@ -54,8 +53,8 @@ no_face_number=0
 #32～43為了圓餅圖的資料而設計
 
 #臉部校正數據
-face_x=3.5
-face_y=0
+face_x=8
+face_y=2
 face_z=0
 
 numl=0
@@ -89,10 +88,13 @@ plus_cal_attenlook=0 #注視恰當(注視觀眾)的加分分數
 noface_time=0
 pre_p1=0#前一次的鼻頭座標
 nose_distance=0#鼻頭的位移、轉動量值
+nose_distance_way=0#鼻頭轉動方向
+pre_nose_distance_way=0#上一次鼻頭轉動方向
 
 delta_min=0#數有多少次的緩慢移動頭部
 look120_loop=0#到目前為止，delta_min的比例
 attention_look=0#注視次數累積
+look120_scan=0#120掃視
 
 judgement_type=0#0:什麼都沒有；12345:臉部朝向一個方向的累積
 pre_judgement_type_addmode=0#之前的判斷
@@ -149,29 +151,31 @@ while cap.isOpened():
         
         if judgement_type_addmode==7:
             cal_120add+=1
+            print("120掃視加分："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+            plus_for120+=1
         elif judgement_type_addmode==5.2:
             cal_long_way+=1
             if judgement_type == 1:
                 cal_longleft += 1
-                print("long time left from："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+                print("long time left："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
             elif judgement_type == 2:
                 cal_longright += 1
-                print("long time Right from："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+                print("long time Right："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
             elif judgement_type == 3:
                 cal_longup += 1
-                print("long time Up from："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+                print("long time Up："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
             elif judgement_type == 4:
                 cal_longdown += 1
-                print("long time Down from："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+                print("long time Down："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
             elif judgement_type == 5:
                 cal_longforward += 1
-                print("long time Forward from："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+                print("long time Forward："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
         elif judgement_type_addmode==6:
             cal_noface += 1
-            print("no face from："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+            print("no face："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
         elif judgement_type_addmode==8:
             cal_attenlook+=1
-            print("注視觀眾 from："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+            print("注視觀眾："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
         pre_judgement_type_addmode=judgement_type_addmode
     judgement_type_addmode=0
         
@@ -258,16 +262,43 @@ while cap.isOpened():
             #120度(y=+-7)內視線的緩慢掃視：未試出
             #y 轉越左邊數值越負，越右邊越正，中間是0
             
-            if -7<y<7: #把臉部鎖定在120度的範圍之內
-               if 3>=nose_distance>=1: #頭部轉動位移在1～3度內
-                 delta_min += 1
-                 look120_loop=round(delta_min/cc,2)
-                 #print('120度的範圍次數：'+str(delta_min))
+            if -15+face_y<y<15+face_y : #把臉部鎖定在120度的範圍之內(有條動,原範圍7 -7)and -5+face_x<x<5+face_x
+            
+                
+                if 3>=nose_distance>0: #頭部轉動位移在1～3度內(有條動,原範圍1 3
+                    if nose_distance_way!=pre_nose_distance_way and  nose_distance>=0.5 :#換方向+非系統跳動(>1)
+                        look120_scan=0
+                        
+                    else:
+                        look120_scan+=1
+                        if look120_scan==1:
+                            chek=y
+                            print('chek'+str(chek))
+                        if look120_scan>10:
+                            if chek-y<-1 or chek-y>1:
+                                judgement_type_addmode=7
+                                print(  '')
+                            else:
+                                look120_scan=0
+                            
+                    # else:
+                    #     look120_scan=0
+                        
+                    delta_min += 1
+                    look120_loop=round(delta_min/cc,2)
+                    #print('120度的範圍次數：'+str(delta_min))
+                else:
+                    look120_scan=0
+            else:  
+                look120_scan=0
+            # else:
+            #     look120_scan=0
             cv2.putText(image, f'120/all loop= {look120_loop}', (int(20*width_ratio),int(450*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
-         
+            print(str(look120_scan)+"/"+str(y)+"/"+str(nose_distance)+"/"+str(nose_distance_way))
+            pre_nose_distance_way=nose_distance_way
             #把頭部轉向限制在一個框框內
         
-            if -5<y<5 and 10>x>1:
+            if -5+face_y<y<5+face_y and 10+face_x>x>1+face_x:
                 attention_look +=1
                 no_atten=0#no atten 歸零
                 if attention_look>=5 : #設定一個時間，注視超過5次的迴圈次數
@@ -389,6 +420,10 @@ while cap.isOpened():
             #cv2.line（要放上去的地方，起始座標，結束座標，（藍，綠，紅），線條寬度）
             if pre_p1!=0:
                 nose_distance=round(np.abs(pre_p1-p1),2)
+                if pre_p1-p1<0:
+                    nose_distance_way=1
+                elif pre_p1-p1>0:
+                    nose_distance_way=2
                 cv2.putText(image, f'nose_dis= {float(nose_distance)}', (int(500*width_ratio),int(100*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 2*width_ratio, (0, 255, 0), 2)
                 if nose_distance>=20: cv2.putText(image, 'Good! Walk around!', (int(400*width_ratio),int(50*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 2*width_ratio, (0, 255, 0), 2)
             # Add the text on the image
