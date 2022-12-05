@@ -269,6 +269,7 @@ while cap.isOpened():
         
             if -5<y<5 and 10>x>1:
                 attention_look +=1
+                no_atten=0#no atten 歸零
                 if attention_look>=5 : #設定一個時間，注視超過5次的迴圈次數
                     cv2.putText(image, f'attention =  {round((attention_look-4)/10,0)} times', (int(20*width_ratio),int(350*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
                     
@@ -276,7 +277,6 @@ while cap.isOpened():
                 no_atten+=1
                 if no_atten>100: #如果頭部不在這個取景框中一段時間（回頭打個噴嚏之類的時間很短就不會進入這個循環，因此會繼續累積注視的次數）
                    attention_look=0#重新計算注視次數，代表離開太久了
-                   no_atten=0#no atten 歸零
                    cv2.putText(image, 'not attention too long', (int(20*width_ratio),int(350*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 2*width_ratio, (0,0,255), 2)
             
        
