@@ -58,19 +58,17 @@ face_x=3.5
 face_y=0
 face_z=0
 
-numl=0
-numr=0
-numm=0
+
 #計數器
-c_noface=0
-c_low=0
-c_low_l=0
-c_low_r=0
-c_low_u=0
-c_low_d=0
-c_low_f=0
-c_120add=0
-c_look=0
+cal_noface=0
+cal_long_way=0
+cal_longleft=0
+cal_longright=0
+cal_longup=0
+cal_longdown=0
+cal_longforward=0
+cal_120add=0
+cal_attenlook=0
 
 plus120=0
 
@@ -118,16 +116,16 @@ while cap.isOpened():
     
     if success==False or cv2.waitKey(5) & 0xFF == 27:
         print('扣分變動：'+str(grade_min2+grade_min1))
-        print('  noface扣分：'+str(c_noface)+'次/n共'+str(grade_min1)+'分')
-        print('  long time one way 扣分：'+str(c_low)+'次/共'+str(grade_min2)+'分')
-        print('  Left：'+str(c_low_l)+'次/共'+str(grade_min2)+'分')
-        print('  Right：'+str(c_low_r)+'次/共'+str(grade_min2)+'分')
-        print('  Up：'+str(c_low_u)+'次/共'+str(grade_min2)+'分')
-        print('  Down：'+str(c_low_d)+'次/共'+str(grade_min2)+'分')
-        print('  Forward：'+str(c_low_f)+'次/共'+str(grade_min2)+'分')
+        print('  noface扣分：'+str(cal_noface)+'次/n共'+str(grade_min1)+'分')
+        print('  long time one way 扣分：'+str(cal_long_way)+'次/共'+str(grade_min2)+'分')
+        print('  Left：'+str(cal_longleft)+'次/共'+str(grade_min2)+'分')
+        print('  Right：'+str(cal_longright)+'次/共'+str(grade_min2)+'分')
+        print('  Up：'+str(cal_longup)+'次/共'+str(grade_min2)+'分')
+        print('  Down：'+str(cal_longdown)+'次/共'+str(grade_min2)+'分')
+        print('  Forward：'+str(cal_longforward)+'次/共'+str(grade_min2)+'分')
         print('加分變動：'+str(grade_plus))
-        print('  120掃視加分：'+str(c_120add)+'次/共'+str(plus120)+'分')
-        print('  注視觀眾加分：'+str(c_look)+'次/共'+str(plus)+'分')
+        print('  120掃視加分：'+str(cal_120add)+'次/共'+str(plus120)+'分')
+        print('  注視觀眾加分：'+str(cal_attenlook)+'次/共'+str(plus)+'分')
         print('基礎分：'+str(grade_base))
         print('總分：'+str(grade_all))
         #print(judgement_type_p1)
@@ -146,30 +144,30 @@ while cap.isOpened():
         time_here_min=int(time_here_min)
         time_here_hr=time_here_min/60
         time_here_hr=int(time_here_hr)
-        if judgement_type_p1==7:
-            c_120add=c_120add+1
-        elif judgement_type_p1==5.2:
-            c_low=c_low+1
+        if judgement_type==7:
+            cal_120add+=1
+        elif judgement_type:
+            cal_long_way+=1
             if judgement_type == 1:
-                c_low_l = c_low_l+1
+                cal_longleft += 1 
                 print("long time left from："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
             elif judgement_type == 2:
-                c_low_r = c_low_r+1
+                cal_longright +=1
                 print("long time Right from："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
             elif judgement_type == 3:
-                c_low_u = c_low_u+1
+                cal_longup +=1
                 print("long time Up from："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
             elif judgement_type == 4:
-                c_low_d = c_low_d+1
+                cal_longdown +=1
                 print("long time Down from："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
             elif judgement_type == 5:
-                c_low_f = c_low_f+1
+                cal_longforward +=1
                 print("long time Forward from："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
         elif judgement_type_p1==6:
-            c_noface=c_noface+1
+            cal_noface+=1
             print("no face from："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
         elif judgement_type_p1==8:
-            c_look=c_look+1
+            cal_attenlook=cal_attenlook+1
             print("注視觀眾 from："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
         judgement_type_p=judgement_type_p1
     judgement_type_p1=0
@@ -202,7 +200,7 @@ while cap.isOpened():
         
         noface_time_end=0#把累積沒臉的時間重新計算
         if judgement_type==6:
-            c_noface=c_noface+1
+            cal_noface=cal_noface+1
             
         for face_landmarks in results.multi_face_landmarks:
             for idx, lm in enumerate(face_landmarks.landmark):
@@ -340,9 +338,9 @@ while cap.isOpened():
                    judgement_type=5
                
             #注視前方的時間介於2～10秒的話加分   
-            if judgement_type==5 and 10<direction_time_end-direction_time_start > 2 :
+            if judgement_type==5 and 10 < direction_time_end-direction_time_start > 2 :
                 #time.sleep(0.5)
-                judgement_type_p1=8
+                judgement_type=6
                 grade_plus = grade_plus + 0.005
                 grade_plus = round(grade_plus, 3)
                 direction_time = round(direction_time_end-direction_time_start, 0)
@@ -351,7 +349,7 @@ while cap.isOpened():
               
             #注視一個的時間>10秒扣分
             if direction_time_end-direction_time_start > 10:
-                  judgement_type_p1=5.2
+                  judgement_type=7
                   grade_min2= grade_min2 - 0.005  
                   grade_min2 = round(grade_min2, 3)
                   direction_time = round((direction_time_end-direction_time_start),2)#將臉部朝向同方向的時間取到小數點第二位
