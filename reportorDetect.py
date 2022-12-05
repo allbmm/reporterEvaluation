@@ -82,7 +82,7 @@ min_for_noface=0#單獨計算noface的扣分分數
 plus_for120=0#120加分
 plus_for_atten=0 #注視恰當(注視觀眾)的加分分數
 min_for_atten=0#注視太長的扣分分數
-plus_cal_atten=0 #注視恰當(注視觀眾)次數
+#plus_cal_atten=0 #注視恰當(注視觀眾)次數
 min_cal_atten=0#注視太長的次數
 
 
@@ -123,9 +123,9 @@ while cap.isOpened():
         print('    Up：'+str(cal_longup)+'次/共'+str(min_for_atten)+'分')
         print('    Down：'+str(cal_longdown)+'次/共'+str(min_for_atten)+'分')
         print('    Forward：'+str(cal_longforward)+'次/共'+str(min_for_atten)+'分')
-        print('加分變動：'+str(plus_cal_atten+plus_for120))
+        print('加分變動：'+str(cal_attenlook+plus_for120))
         print('  120掃視加分：'+str(cal_120add)+'次/共'+str(plus_for120)+'分')
-        print('  注視觀眾加分：'+str(plus_cal_atten)+'次/共'+str(plus_for_atten)+'分')
+        print('  注視觀眾加分：'+str(cal_attenlook)+'次/共'+str(plus_for_atten)+'分')
         print('基礎分：'+str(grade_base))
         print('總分：'+str(grade_all))
         #print(judgement_type_addmode)
@@ -358,7 +358,6 @@ while cap.isOpened():
                    
                 #time.sleep(0.5)
                 judgement_type_addmode=8
-                plus_cal_atten+=1#注視加分次數
                 plus_for_atten = plus_for_atten + 0.005#注視加分分數
                 plus_for_atten = round(plus_for_atten, 3)
                 direction_time = round(direction_time_end-direction_time_start, 0)
@@ -521,7 +520,7 @@ plt.pie(y,
         autopct='%.2f%%')
 plt.title("Final Result"+"\namong of grade ="+str(grade_all)+" \n\n"+last_text)
 #plt.title("among of grade ="+str(grade_all),loc="center")
-plt.savefig('C:/Users/to4/Desktop/111-1/hf/data/headpose_Pie_chart.jpg') #綠色這裡要改成自己要存的地方資料夾
+#plt.savefig('C:/Users/to4/Desktop/111-1/hf/data/headpose_Pie_chart.jpg') #綠色這裡要改成自己要存的地方資料夾
 plt.show()
 
 
