@@ -94,9 +94,9 @@ nose_distance=0#鼻頭的位移、轉動量值
 delta_min=0#數有多少次的緩慢移動頭部
 look120_loop=0#到目前為止，delta_min的比例
 attention_look=0#注視次數累積
-judgement_type=0#判斷是否為同個面部朝向的變數
-judgement_type_p=0
-judgement_type_p1=0
+judgement_type=0
+#0:什麼都沒有；12345:臉部朝向一個方向的累積；6:noface扣分；7:120度加分；8：注視加分
+pre_judgement_type=0#之前的判斷
 
 direction_time_start=0#臉部朝向的累積開始時間
 direction_time_end=0#臉部朝向的累積結束時間
@@ -132,7 +132,7 @@ while cap.isOpened():
         
         break
     
-    if judgement_type_p!=judgement_type_p1:
+    if pre_judgement_type!=judgement_type:
         time_here_s=0
         time_here_min =0
         time_here_hr=0
@@ -150,27 +150,28 @@ while cap.isOpened():
             cal_long_way+=1
             if judgement_type == 1:
                 cal_longleft += 1 
-                print("long time left from："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+                print("long time left ："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
             elif judgement_type == 2:
                 cal_longright +=1
-                print("long time Right from："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+                print("long time Right ："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
             elif judgement_type == 3:
                 cal_longup +=1
-                print("long time Up from："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+                print("long time Up ："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
             elif judgement_type == 4:
                 cal_longdown +=1
-                print("long time Down from："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+                print("long time Down ："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
             elif judgement_type == 5:
                 cal_longforward +=1
-                print("long time Forward from："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
-        elif judgement_type_p1==6:
+                print("long time Forward ："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+        elif judgement_type==6:
             cal_noface+=1
-            print("no face from："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
-        elif judgement_type_p1==8:
+            print("no face  ："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+        elif judgement_type==8:
             cal_attenlook=cal_attenlook+1
-            print("注視觀眾 from："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
-        judgement_type_p=judgement_type_p1
-    judgement_type_p1=0
+            print("注視觀眾 ："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+        pre_judgement_type=judgement_type
+        #目前的類型1～8存到下個迴圈用，pre_代表前一個的類型
+    judgement_type=0
         
     start = time.time()
 
@@ -258,9 +259,10 @@ while cap.isOpened():
             
             if -7<y<7: #把臉部鎖定在120度的範圍之內
                if 3>=nose_distance>=1: #頭部轉動位移在1～3度內
+                 judgement_type=7
                  delta_min += 1
                  look120_loop=round(delta_min/cc,2)
-                 print('120度的範圍次數：'+str(delta_min))
+                 #print('120度的範圍次數：'+str(delta_min))
             cv2.putText(image, f'120/all loop= {look120_loop}', (int(20*width_ratio),int(450*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
          
            
