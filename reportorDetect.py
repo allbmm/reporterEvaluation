@@ -258,7 +258,7 @@ while cap.isOpened():
             #120度(y=+-7)內視線的緩慢掃視：未試出
             #y 轉越左邊數值越負，越右邊越正，中間是0
             
-            if -7<y<7: #把臉部鎖定在120度的範圍之內
+            if -7+face_y<y<7+face_y: #把臉部鎖定在120度的範圍之內
                if 3>=nose_distance>=1: #頭部轉動位移在1～3度內
                  delta_min += 1
                  look120_loop=round(delta_min/cc,2)
@@ -267,7 +267,7 @@ while cap.isOpened():
          
             #把頭部轉向限制在一個框框內
         
-            if -5<y<5 and 10>x>1:
+            if -5+face_y<y<5+face_y and 10+face_x>x>1+face_x:
                 attention_look +=1
                 no_atten=0#no atten 歸零
                 if attention_look>=5 : #設定一個時間，注視超過5次的迴圈次數
