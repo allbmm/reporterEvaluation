@@ -12,7 +12,7 @@ import scipy.stats as st
 import math
 from PIL import Image ,ImageDraw,ImageFont
 #%%
-time_start = time.time() #開始計時
+
 chek=0
 
 mp_face_mesh = mp.solutions.face_mesh
@@ -87,7 +87,7 @@ look120_loop=0#到目前為止，delta_min的比例
 attention_look=0#注視次數累積
 look120_scan=0#120掃視
 
-judgement_type=0#0:什麼都沒有；12345:臉部朝向一個方向的累積 8注視扣分 5.2注視加分 6noface扣分
+# judgement_type=0#0:什麼都沒有；12345:臉部朝向一個方向的累積 8注視扣分 5.2注視加分 6noface扣分
 pre_judgement_type_addmode=0#之前的判斷
 judgement_type_addmode=0#判斷是否為同個加分模式
 
@@ -101,6 +101,7 @@ last_text=""#最後圓餅圖顯示的文字
 
 X_angle = []
 Y_angle = []
+time_start = time.time() #開始計時
 while cap.isOpened():
     #（success：image有東西就會回傳true 沒東西就是false） （image：一開始的那個影像格）
     success, image = cap.read()
@@ -132,7 +133,7 @@ while cap.isOpened():
         time_here_hr=0
         
         time_here=direction_time_start-time_start
-        time_here = round(time_here, 2)
+        time_here = round(time_here,2)
         time_here_s=time_here%60
         time_here_min = (time_here-time_here_s/60)%60
         time_here_min=int(time_here_min)
@@ -150,16 +151,15 @@ while cap.isOpened():
             print("no face："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
             cal_noface+=1
             pre_judgement_type_addmode=judgement_type_addmode
-            judgement_type_addmode=0
-    #跳動bug
+            # judgement_type_addmode=0
         elif judgement_type_addmode==5.2:#注視扣分，若有扣分需要分5個方向分別計算時間
             min_cal_atten+=1#注視扣分次數
             print("long time look："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+            pre_judgement_type_addmode=judgement_type_addmode
         elif judgement_type_addmode==8:
             cal_attenlook+=1
             print("注視觀眾："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
-        pre_judgement_type_addmode=judgement_type_addmode
-    #judgement_type_addmode=0
+            pre_judgement_type_addmode=judgement_type_addmode
         
     start = time.time()
 
@@ -187,7 +187,8 @@ while cap.isOpened():
         noface_time_start=time.time() 
         cc_for_haveface+=1
         
-        noface_time_end=0#把累積沒臉的時間重新計算
+        noface_time=0
+        # noface_time_end=0#把累積沒臉的時間重新計算
       
             
         for face_landmarks in results.multi_face_landmarks:
@@ -280,13 +281,14 @@ while cap.isOpened():
         
             if -5+face_y<y<5+face_y and 10+face_x>x>1+face_x:
                 attention_look +=1
-                if attention_look>=5 : #設定一個時間，注視超過5次的迴圈次數
+                if attention_look>=20 : #設定一個時間，注視超過5次的迴圈次數
                     if attention_look>=100 :#參數帶調整
                         judgement_type_addmode=5.2
                         min_for_atten= min_for_atten - 0.005 #注視扣分的分數
                         min_for_atten = round(min_for_atten, 3)
                     else:
                         no_atten=0#no atten 歸零
+                        noface_time=0
                         judgement_type_addmode=8
                         plus_for_atten = plus_for_atten + 0.005#注視加分分數
                         plus_for_atten = round(plus_for_atten, 3)
@@ -296,9 +298,10 @@ while cap.isOpened():
                     
             else:
                 no_atten+=1
-                if no_atten>30:
+                if no_atten>20:
                     attention_look=0#重新計算注視次數，代表離開太久了
-                if no_atten>50: #如果頭部不在這個取景框中一段時間（回頭打個噴嚏之類的時間很短就不會進入這個循環，因此會繼續累積注視的次數）100數值蓋
+                    noface_time=0
+                if no_atten>100: #如果頭部不在這個取景框中一段時間（回頭打個噴嚏之類的時間很短就不會進入這個循環，因此會繼續累積注視的次數）100數值蓋
                    judgement_type_addmode=5.2
                    min_for_atten= min_for_atten - 0.005 #注視扣分的分數
                    min_for_atten = round(min_for_atten, 3)
@@ -314,10 +317,10 @@ while cap.isOpened():
                 #print(num1)
                 turn_left.append(num1)
                 
-                if judgement_type!=1:#如果之前的面部朝向不是向左這個類型就重新開始累積向前的時間
-                    direction_time_start=time.time()#開始進行朝向左的時間計時
-                    direction_time_end=0#把之前不管是怎樣面部朝向的累積時間清零
-                    judgement_type=1
+                # if judgement_type!=1:#如果之前的面部朝向不是向左這個類型就重新開始累積向前的時間
+                #     direction_time_start=time.time()#開始進行朝向左的時間計時
+                #     direction_time_end=0#把之前不管是怎樣面部朝向的累積時間清零
+                #     judgement_type=1
                  
                  
             elif y > 6+face_y:
@@ -328,10 +331,10 @@ while cap.isOpened():
                 #print(num2)
                 turn_right.append(num2)
                 
-                if judgement_type!=2:#如果之前的面部朝向不是向右這個類型就重新開始累積向前的時間
-                    direction_time_start=time.time()#開始進行朝向右的時間計時
-                    direction_time_end=0#把之前不管是怎樣面部朝向的累積時間清零
-                    judgement_type=2
+                # if judgement_type!=2:#如果之前的面部朝向不是向右這個類型就重新開始累積向前的時間
+                #     direction_time_start=time.time()#開始進行朝向右的時間計時
+                #     direction_time_end=0#把之前不管是怎樣面部朝向的累積時間清零
+                #     judgement_type=2
                  
                  
             elif x < -5+face_x:
@@ -343,10 +346,10 @@ while cap.isOpened():
                 #grade = grade + minues
                 #print(num3)
                 turn_down.append(num3)
-                if judgement_type!=3:#如果之前的面部朝向不是向下這個類型就重新開始累積向前的時間
-                    direction_time_start=time.time()#開始進行朝向下的時間計時
-                    direction_time_end=0#把之前不管是怎樣面部朝向的累積時間清零
-                    judgement_type=3
+                # if judgement_type!=3:#如果之前的面部朝向不是向下這個類型就重新開始累積向前的時間
+                #     direction_time_start=time.time()#開始進行朝向下的時間計時
+                #     direction_time_end=0#把之前不管是怎樣面部朝向的累積時間清零
+                #     judgement_type=3
                  
                  
             elif x > 5+face_x:
@@ -357,10 +360,10 @@ while cap.isOpened():
                 #print(num4)
                 turn_up.append(num4)
                 
-                if judgement_type!=4:#如果之前的面部朝向不是向上這個類型就重新開始累積向上的時間
-                    direction_time_start=time.time()#開始進行朝向上的時間計時
-                    direction_time_end=0#把之前不管是怎樣面部朝向的累積時間清零
-                    judgement_type=4
+                # if judgement_type!=4:#如果之前的面部朝向不是向上這個類型就重新開始累積向上的時間
+                #     direction_time_start=time.time()#開始進行朝向上的時間計時
+                #     direction_time_end=0#把之前不管是怎樣面部朝向的累積時間清零
+                #     judgement_type=4
                  
                  
             else:
@@ -372,25 +375,11 @@ while cap.isOpened():
                #print(num5)
                turn_foward.append(num5)
                
-               if judgement_type!=5:#如果之前的面部朝向不是向前這個類型就重新開始累積向前的時間
-                   direction_time_start=time.time()#開始進行朝向前面的時間計時
-                   direction_time_end=0#把之前不管是怎樣面部朝向的累積時間清零
-                   judgement_type=5
+               # if judgement_type!=5:#如果之前的面部朝向不是向前這個類型就重新開始累積向前的時間
+               #     direction_time_start=time.time()#開始進行朝向前面的時間計時
+               #     direction_time_end=0#把之前不管是怎樣面部朝向的累積時間清零
+               #     judgement_type=5
                
-            # #注視加分   
-            # if judgement_type==5 and direction_time_end-direction_time_start > 2 and direction_time_end-direction_time_start < 10:
-                   
-            #     #time.sleep(0.5)
-            #     judgement_type_addmode=8
-            #     plus_for_atten = plus_for_atten + 0.005#注視加分分數
-            #     plus_for_atten = round(plus_for_atten, 3)
-            #     direction_time = round(direction_time_end-direction_time_start, 0)
-            #     cv2.putText(image, "attention look time : "+str(direction_time)+"s", (int(20*width_ratio),int(650*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 2*width_ratio, (255, 215, 0), 2)
-            #    #cv2.putText(image,str(lei)+"    "+str(int(leiji_start)), (400,600),cv2.FONT_HERSHEY_SIMPLEX, 1, (138, 42, 226), 2)
-           
-            
-            
-          
             # Display the nose direction
             nose_3d_projection, jacobian = cv2.projectPoints(nose_3d, rot_vec, trans_vec, cam_matrix, dist_matrix)
 
@@ -456,8 +445,6 @@ while cap.isOpened():
     else:
         #程式到這裡代表沒有偵測到臉
 
-        judgement_type=0
-
         grade_variable=min_for_noface+min_for_atten+plus_for_atten+plus_for120
         no_face_number = no_face_number +1 #for 圓餅圖
         
@@ -471,17 +458,23 @@ while cap.isOpened():
            cv2.putText(image,"time:"+str(int(noface_time_end-noface_time_start))+"s", (int(300*width_ratio), int(500*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 3*width_ratio, (138, 43, 226), 3)
         cv2.putText(image,"time:"+str(int(noface_time_end-noface_time_start))+"s", (int(300*width_ratio), int(500*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 3*width_ratio, (138, 43, 226), 3)
    
-        if noface_time>200:#累積（沒有找到臉）大於迴圈次數200
+        if noface_time>20:#累積（沒有找到臉）大於迴圈次數200
+            no_atten=0
+            attention_look=0    
+        if noface_time()>30:
+            judgement_type_addmode=6
+            min_for_noface = min_for_noface - 0.01
+            min_for_noface = round(min_for_noface, 3)   
             cv2.putText(image,"no face too long!!", (int(200*width_ratio),int(300*height_ratio)),cv2.FONT_HERSHEY_SIMPLEX, 4*width_ratio, (138, 42, 226), 3)
     
-    if noface_time_end - noface_time_start> 3:#如果累積（沒有找到臉）大於3秒那麼就會扣分
-        #time.sleep(0.2)
-        judgement_type_addmode=6
-        min_for_noface = min_for_noface - 0.01
-        min_for_noface = round(min_for_noface, 3)
-        #cv2.putText(image,leiji+"s  "+ str(grade/100), (300, 600), cv2.FONT_HERSHEY_SIMPLEX, 3, (138, 43, 226), 3)
+    # if noface_time_end - noface_time_start> 3:#如果累積（沒有找到臉）大於3秒那麼就會扣分
+    #     #time.sleep(0.2)
+    #     judgement_type_addmode=6
+    #     min_for_noface = min_for_noface - 0.01
+    #     min_for_noface = round(min_for_noface, 3)
+    #     #cv2.putText(image,leiji+"s  "+ str(grade/100), (300, 600), cv2.FONT_HERSHEY_SIMPLEX, 3, (138, 43, 226), 3)
     
-        cv2.putText(image,"Deduct points!!", (int(200*width_ratio),int(300*height_ratio)),cv2.FONT_HERSHEY_SIMPLEX, 4*width_ratio, (138, 42, 226), 3)
+    #     cv2.putText(image,"Deduct points!!", (int(200*width_ratio),int(300*height_ratio)),cv2.FONT_HERSHEY_SIMPLEX, 4*width_ratio, (138, 42, 226), 3)
     
     if cc%20==0:
         # 309～319即時顯示變化的圓餅圖
