@@ -112,11 +112,11 @@ while cap.isOpened():
         print('扣分變動：'+str(min_for_atten+min_for_noface))
         print('  noface扣分：'+str(cal_noface)+'次/共'+str(min_for_noface)+'分')
         print('  long time one way 扣分：'+str(min_cal_atten)+'次/n共'+str(min_for_atten)+'分')
-        print('    Left：'+str(cal_longleft)+'次')
-        print('    Right：'+str(cal_longright)+'次')
-        print('    Up：'+str(cal_longup)+'次')
-        print('    Down：'+str(cal_longdown)+'次')
-        print('    Forward：'+str(cal_longforward)+'次')
+        # print('    Left：'+str(cal_longleft)+'次')
+        # print('    Right：'+str(cal_longright)+'次')
+        # print('    Up：'+str(cal_longup)+'次')
+        # print('    Down：'+str(cal_longdown)+'次')
+        # print('    Forward：'+str(cal_longforward)+'次')
         print('加分變動：'+str(plus_for_atten+plus_for120))
         print('  120掃視加分：'+str(cal_120add)+'次/共'+str(plus_for120)+'分')
         print('  注視觀眾加分：'+str(cal_attenlook)+'次/共'+str(plus_for_atten)+'分')
@@ -131,13 +131,13 @@ while cap.isOpened():
         time_here_s=0
         time_here_min =0
         time_here_hr=0
-        
+        direction_time_start=time.time()
         time_here=direction_time_start-time_start
-        time_here = round(time_here,2)
+        time_here = int(time_here)
         time_here_s=time_here%60
-        time_here_min = (time_here-time_here_s/60)%60
-        time_here_min=int(time_here_min)
-        time_here_hr=time_here_min/60
+        time_here_min = time_here/60
+        time_here_min=int(time_here_min%60)
+        time_here_hr=time_here/3600
         time_here_hr=int(time_here_hr)
         
         #所有模式的計數
@@ -146,6 +146,9 @@ while cap.isOpened():
             print("120掃視加分："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
             plus_for120+=1
             pre_judgement_type_addmode=judgement_type_addmode
+            no_atten=0#no atten 歸零
+            noface_time=0
+            attention_look=0
             judgement_type_addmode=0
         elif judgement_type_addmode==6:
             print("no face："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
@@ -245,7 +248,7 @@ while cap.isOpened():
             #120度(y=+-7)內視線的緩慢掃視
             #y 轉越左邊數值越負，越右邊越正，中間是0
 
-            if -15+face_y<y<15+face_y : #把臉部鎖定在120度的範圍之內(有條動,原範圍7 -7)and -5+face_x<x<5+face_x
+            if -15+face_y<y<15+face_y and -5+face_x<x<5+face_x : #把臉部鎖定在120度的範圍之內(有條動,原範圍7 -7)
                 if 3>=nose_distance>0: #頭部轉動位移在1～3度內(有條動,原範圍1 3
                     if nose_distance_way!=pre_nose_distance_way and  nose_distance>=0.5 :#換方向+非系統跳動(>1)
                         look120_scan=0
@@ -461,7 +464,7 @@ while cap.isOpened():
         if noface_time>20:#累積（沒有找到臉）大於迴圈次數200
             no_atten=0
             attention_look=0    
-        if noface_time()>30:
+        if noface_time>30:
             judgement_type_addmode=6
             min_for_noface = min_for_noface - 0.01
             min_for_noface = round(min_for_noface, 3)   
