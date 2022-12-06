@@ -18,6 +18,11 @@ chek=0
 mp_face_mesh = mp.solutions.face_mesh
 face_mesh = mp_face_mesh.FaceMesh(min_detection_confidence=0.5, min_tracking_confidence=0.5)
 
+mp_drawing = mp.solutions.drawing_utils
+mp_drawing_styles = mp.solutions.drawing_styles
+mp_holistic = mp.solutions.holistic
+holistic=mp_holistic.Holistic(min_detection_confidence=0.5,min_tracking_confidence=0.5) 
+    
 mp_drawing = mp.solutions.drawing_utils#繪圖方法
 
 drawing_spec = mp_drawing.DrawingSpec(thickness=1, circle_radius=1)#繪圖參數設定
@@ -61,16 +66,23 @@ cal_attenlook=0
 
 width_ratio=cap.get(cv2.CAP_PROP_FRAME_WIDTH)/1280
 height_ratio=cap.get(cv2.CAP_PROP_FRAME_HEIGHT)/720
+wight=cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+height=cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 
 cc=0#總共迴圈的次數
 cc_for_haveface=0#有臉的計數
 no_atten=0
 grade_all=0#所有總分，加扣分和基本分加起來
 grade_base=0#基本分數
+plus_point=0#所有的加分分數
+min_point=0#所有的扣分分數
 
 min_for_noface=0#單獨計算noface的扣分分數
 plus_for120=0#120加分
 plus_for_atten=0 #注視恰當(注視觀眾)的加分分數
+plus_for_deltay=0#位移好加分
+min_for_deltay_herry=0#位移快扣分
+min_for_deltay_slow=0#位移慢扣分
 min_for_atten=0#注視太長的扣分分數
 #plus_cal_atten=0 #注視恰當(注視觀眾)次數
 min_cal_atten=0#注視太長的次數
@@ -78,6 +90,12 @@ min_cal_atten=0#注視太長的次數
 
 noface_time=0
 pre_p1=0#前一次的鼻頭座標
+center=0#肩膀中心座標center
+pre_center=0#之前的中心座標
+delta_center=0#中心座標的改變量
+plus_cal_deltay=0#計算位移加分的次數
+min_cal_deltay_herry=0#計算位移太快的扣分次數
+min_cal_deltay_slow=0#計算位移太慢的扣分次數
 nose_distance=0#鼻頭的位移、轉動量值
 nose_distance_way=0#鼻頭轉動方向
 pre_nose_distance_way=0#上一次鼻頭轉動方向
@@ -87,7 +105,7 @@ look120_loop=0#到目前為止，delta_min的比例
 attention_look=0#注視次數累積
 look120_scan=0#120掃視
 
-# judgement_type=0#0:什麼都沒有；12345:臉部朝向一個方向的累積 8注視扣分 5.2注視加分 6noface扣分
+# judgement_type=0#0:什麼都沒有；12345:臉部朝向一個方向的累積 8注視扣分 5.2注視加分 6noface扣分 10 位移加分
 pre_judgement_type_addmode=0#之前的判斷
 judgement_type_addmode=0#判斷是否為同個加分模式
 
@@ -102,6 +120,15 @@ last_text=""#最後圓餅圖顯示的文字
 X_angle = []
 Y_angle = []
 time_start = time.time() #開始計時
+
+# mp_drawing = mp.solutions.drawing_utils
+# mp_drawing_styles = mp.solutions.drawing_styles
+# mp_holistic = mp.solutions.holistic
+
+# with mp_holistic.Holistic(
+#         min_detection_confidence=0.5,
+#         min_tracking_confidence=0.5) as holistic:
+    
 while cap.isOpened():
     #（success：image有東西就會回傳true 沒東西就是false） （image：一開始的那個影像格）
     success, image = cap.read()
@@ -111,6 +138,8 @@ while cap.isOpened():
     if success==False or cv2.waitKey(5) & 0xFF == 27:
         print('扣分變動：'+str(min_for_atten+min_for_noface))
         print('  noface扣分：'+str(cal_noface)+'次/共'+str(min_for_noface)+'分')
+        print('  位移太快扣分：'+str(min_cal_deltay_herry)+'次/共'+str(min_for_deltay_herry)+'分')
+        print('  位移太慢扣分：'+str(min_cal_deltay_slow)+'次/共'+str(min_for_deltay_slow)+'分')
         print('  long time one way 扣分：'+str(min_cal_atten)+'次/n共'+str(min_for_atten)+'分')
         print('    Left：'+str(cal_longleft)+'次')
         print('    Right：'+str(cal_longright)+'次')
@@ -120,6 +149,8 @@ while cap.isOpened():
         print('加分變動：'+str(plus_for_atten+plus_for120))
         print('  120掃視加分：'+str(cal_120add)+'次/共'+str(plus_for120)+'分')
         print('  注視觀眾加分：'+str(cal_attenlook)+'次/共'+str(plus_for_atten)+'分')
+        print('  位移的當加分：'+str(plus_cal_deltay)+'次/共'+str(plus_for_deltay)+'分')
+        
         print('基礎分：'+str(grade_base))
         print('總分：'+str(grade_all))
         #print(judgement_type_addmode)
@@ -160,7 +191,18 @@ while cap.isOpened():
             cal_attenlook+=1
             print("注視觀眾："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
             pre_judgement_type_addmode=judgement_type_addmode
-        
+        elif judgement_type_addmode==10:
+            plus_cal_deltay+=1
+            #時間的部分麻煩你我不太會這裡謝啦
+            pre_judgement_type_addmode=judgement_type_addmode
+        elif judgement_type_addmode==10.1:
+            min_cal_deltay_herry+=1
+            #時間的部分麻煩你我不太會這裡謝啦
+            pre_judgement_type_addmode=judgement_type_addmode
+        elif judgement_type_addmode==10.2:
+            min_cal_deltay_slow+=1
+            #時間的部分麻煩你我不太會這裡謝啦
+            pre_judgement_type_addmode=judgement_type_addmode
     start = time.time()
 
     #水平翻轉攝像鏡頭
@@ -172,6 +214,7 @@ while cap.isOpened():
     
     # Get the result
     results = face_mesh.process(image)
+    results2 = holistic.process(image)#專門給pose的results
       # To improve performance
     image.flags.writeable = True
     
@@ -408,20 +451,53 @@ while cap.isOpened():
             cv2.putText(image, "x: " + str(np.round(x,2)), (int(1100*width_ratio), int(50*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1*width_ratio, (0, 0, 255), 2)
             cv2.putText(image, "y: " + str(np.round(y,2)), (int(1100*width_ratio), int(100*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1*width_ratio, (0, 0, 255), 2)
             cv2.putText(image, "z: " + str(np.round(z,2)), (int(1100*width_ratio), int(150*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1*width_ratio, (0, 0, 255), 2)
+                                                              #這個是調整xyz的顯示位置
+            #pose 部分：取肩膀連線的座標center為參考                                                
+            
+            landmarks = results2.pose_landmarks.landmark#pose的標記
+            nose=np.array([landmarks[mp_holistic.PoseLandmark.NOSE.value].x,landmarks[mp_holistic.PoseLandmark.NOSE.value].y])
+            leftshoulder = np.array([landmarks[mp_holistic.PoseLandmark.LEFT_SHOULDER.value].x,landmarks[mp_holistic.PoseLandmark.LEFT_SHOULDER.value].y])
+            rightshoulder = np.array([landmarks[mp_holistic.PoseLandmark.RIGHT_SHOULDER.value].x,landmarks[mp_holistic.PoseLandmark.RIGHT_SHOULDER.value].y])
+            #print(float(leshoulder[1])*img_w)#直向位移
+            #tuple(np.multiply(elbow,[wight,height]).astype(int)), 
            
-                                                          #這個是調整xyz的顯示位置
-
+            #print(float(leftshoulder[0])*img_h)#橫向位移（畫面的寬度為單位）#+rightshoulder[1,0])/2)
+            center=round((float(leftshoulder[0])*img_h+float(rightshoulder[0])*img_h)/2,2)
+            cv2.putText(image, f'asex:{center}', 
+                    tuple(np.multiply(nose,[wight,height]).astype(int)), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+            #我在想這裡會不會有跟120度加分的那個撞在一起要不要設定成沒有檢測120度在檢測位移或是反過來
+            if pre_center!=0:
+                delta_center=np.abs(center-pre_center)
+                print(delta_center)
+                if 1.5<delta_center<=5:
+                    judgement_type_addmode=10
+                    plus_for_deltay+=0.05
+                    cv2.putText(image, 'move good', (int(20*width_ratio),int(650*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
+                
+                elif delta_center>20:#移動太快
+                    judgement_type_addmode=10.1
+                    min_for_deltay_herry+=0.05
+                    cv2.putText(image, 'move so herry', (int(20*width_ratio),int(650*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
+                elif delta_center<=1:#移動太慢
+                    judgement_type_addmode=10.2
+                    min_for_deltay_slow+=0.05
+                    cv2.putText(image, 'move so slow', (int(20*width_ratio),int(650*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
+             
+            pre_center=center
+            time.sleep(0)                                           
         end = time.time()
         totalTime = end - start
         
         
         fps = 1 / totalTime
         
-        plus_point=round(plus_for_atten+plus_for120,3)
-        grade_variable=min_for_noface+min_for_atten+plus_for_atten+plus_for120
+        plus_point=round(plus_for_atten+plus_for120+plus_for_deltay,3)
+        min_point=round(min_for_noface+min_for_atten+min_for_deltay_herry+min_for_deltay_slow,3)
+        grade_variable=round(min_point+plus_point,3)
         #print("FPS: ", fps)
         #cv2.putText(image, f'basic point: {int(grade_base)}', (20,500), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0,255,0), 2)
-        cv2.putText(image, f'minus point: {float(min_for_noface+min_for_atten)}', (int(20*width_ratio),int(550*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
+        cv2.putText(image, f'minus point: {float(min_point)}', (int(20*width_ratio),int(550*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
         cv2.putText(image, f'plus point: {float(plus_point)}', (int(20*width_ratio),int(600*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
         cv2.putText(image, f'base grade: {float(grade_base)}', (int(20*width_ratio),int(500*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
         cv2.putText(image, f'FPS: {int(fps)}', (int(1000*width_ratio),int(700*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
@@ -435,15 +511,9 @@ while cap.isOpened():
         #從noface狀態轉換到有face狀態後，計算有face維持多久，若有足夠時間，即重新計算noface_time
         if noface_time!=0 and cc_for_haveface >= 100: 
             noface_time=0
-        # if lei> 3:#如果累積（沒有找到臉）大於2秒那麼就會扣分
-        #     time.sleep(0.2)
-        #     plus = -1
-        #     grade = grade+plus
-        #     cv2.putText(image,"kou fen!!", (400,600),cv2.FONT_HERSHEY_SIMPLEX, 3, (138, 42, 226), 3)
-        
 
-    else:
-        #程式到這裡代表沒有偵測到臉
+    elif no_face_number !=0: 
+        #程式到這裡代表沒有偵測到臉，一開始程式卡頓的話不會跳出noface
 
         grade_variable=min_for_noface+min_for_atten+plus_for_atten+plus_for120
         no_face_number = no_face_number +1 #for 圓餅圖
@@ -461,7 +531,7 @@ while cap.isOpened():
         if noface_time>20:#累積（沒有找到臉）大於迴圈次數200
             no_atten=0
             attention_look=0    
-        if noface_time()>30:
+        if noface_time>30:
             judgement_type_addmode=6
             min_for_noface = min_for_noface - 0.01
             min_for_noface = round(min_for_noface, 3)   
@@ -488,7 +558,7 @@ while cap.isOpened():
         autopct='%.2f%%')
 
         plt.title("Head Pose Estimation"+str(cc))
-        plt.savefig("C:/Users/to4/Desktop/111-1/hf/data/headpose_Pie_chart"+str(cc)+".jpg") #綠色這裡要改成自己要存的地方資料夾
+        #plt.savefig("C:/Users/to4/Desktop/111-1/hf/data/headpose_Pie_chart"+str(cc)+".jpg") #綠色這裡要改成自己要存的地方資料夾
         plt.show()
     cv2.imshow('Head Pose Estimation', image)
 
@@ -501,18 +571,13 @@ while cap.isOpened():
     else:
        grade_base = 60
    
-    grade_all=grade_variable+grade_base#算總分
-    grade_all=round(grade_all,3)
-    if grade_all>60:
-        last_text="Good Presenter!"
-    else:
-        last_text="Bad Presenter!"
+  
 XX_angle = pd.DataFrame(X_angle)
 YY_angle = pd.DataFrame(Y_angle)
 XY_angle = pd.DataFrame(XX_angle)
 XY_angle = pd.concat([XX_angle,YY_angle],axis=1)              
 XXYY_angle = pd.DataFrame(XY_angle)
-XXYY_angle.to_excel("C:/Users/to4/Desktop/111-1/hf/data/head pose estimation.xlsx")  
+#XXYY_angle.to_excel("C:/Users/to4/Desktop/111-1/hf/data/head pose estimation.xlsx")  
 #綠色這裡要改成自己要存的地方資料夾
 
 
