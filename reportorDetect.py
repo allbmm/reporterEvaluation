@@ -126,7 +126,7 @@ while cap.isOpened():
         print('    Up：'+str(cal_longup)+'次')
         print('    Down：'+str(cal_longdown)+'次')
         print('    Forward：'+str(cal_longforward)+'次')
-        print('加分變動：'+str(cal_attenlook+plus_for120))
+        print('加分變動：'+str(plus_for_atten+plus_for120))
         print('  120掃視加分：'+str(cal_120add)+'次/共'+str(plus_for120)+'分')
         print('  注視觀眾加分：'+str(cal_attenlook)+'次/共'+str(plus_for_atten)+'分')
         print('基礎分：'+str(grade_base))
