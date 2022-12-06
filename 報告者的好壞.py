@@ -1,15 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Sun May 22 19:05:09 2022
 
-@author: TINA
-"""
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Dec  3 20:35:20 2022
-
-@author: to4
-"""
 import cv2
 import mediapipe as mp
 import numpy as np
