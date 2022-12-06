@@ -49,8 +49,8 @@ no_face_number=0
 #32～43為了圓餅圖的資料而設計
 
 #臉部校正數據
-face_x=5
-face_y=6
+face_x=12
+face_y=0
 face_z=0
 
 #計數器
@@ -108,6 +108,8 @@ look120_scan=0#120掃視
 # judgement_type=0#0:什麼都沒有；12345:臉部朝向一個方向的累積 8注視扣分 5.2注視加分 6noface扣分 10 位移加分
 pre_judgement_type_addmode=0#之前的判斷
 judgement_type_addmode=0#判斷是否為同個加分模式
+pre_judgement_type_addmode_buddy=0
+judgement_type_addmode_buddy=0
 
 direction_time_start=0#臉部朝向的累積開始時間
 direction_time_end=0#臉部朝向的累積結束時間
@@ -136,7 +138,7 @@ while cap.isOpened():
     cc=cc+1
     
     if success==False or cv2.waitKey(5) & 0xFF == 27:
-        print('扣分變動：'+str(min_for_atten+min_for_noface))
+        print('扣分變動：'+str(min_for_atten+min_for_noface+min_for_deltay_herry+min_for_deltay_herry))
         print('  noface扣分：'+str(cal_noface)+'次/共'+str(min_for_noface)+'分')
         print('  位移太快扣分：'+str(min_cal_deltay_herry)+'次/共'+str(min_for_deltay_herry)+'分')
         print('  位移太慢扣分：'+str(min_cal_deltay_slow)+'次/共'+str(min_for_deltay_slow)+'分')
@@ -146,7 +148,7 @@ while cap.isOpened():
         print('    Up：'+str(cal_longup)+'次')
         print('    Down：'+str(cal_longdown)+'次')
         print('    Forward：'+str(cal_longforward)+'次')
-        print('加分變動：'+str(plus_for_atten+plus_for120))
+        print('加分變動：'+str(plus_for_atten+plus_for120+plus_for_deltay))
         print('  120掃視加分：'+str(cal_120add)+'次/共'+str(plus_for120)+'分')
         print('  注視觀眾加分：'+str(cal_attenlook)+'次/共'+str(plus_for_atten)+'分')
         print('  位移的當加分：'+str(plus_cal_deltay)+'次/共'+str(plus_for_deltay)+'分')
@@ -157,53 +159,52 @@ while cap.isOpened():
        
         
         break
-    
-    if pre_judgement_type_addmode!=judgement_type_addmode:
+    #如果這次與前次tipe不一樣，記錄前一次tipe
+    if pre_judgement_type_addmode!=judgement_type_addmode or pre_judgement_type_addmode_buddy!=judgement_type_addmode_buddy:
+        
         time_here_s=0
         time_here_min =0
         time_here_hr=0
-        
+        direction_time_start=time.time()
         time_here=direction_time_start-time_start
         time_here = round(time_here,2)
         time_here_s=time_here%60
-        time_here_min = (time_here-time_here_s/60)%60
-        time_here_min=int(time_here_min)
-        time_here_hr=time_here_min/60
+        time_here_min = time_here/60
+        time_here_min=int(time_here_min%60)
+        time_here_hr=time_here/3600
         time_here_hr=int(time_here_hr)
         
-        #所有模式的計數
-        if judgement_type_addmode==7:#120度加分模式
+    #所有模式的計數
+        #頭判斷
+        if pre_judgement_type_addmode==7:#120度加分模式
             cal_120add+=1
             print("120掃視加分："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
             plus_for120+=1
-            pre_judgement_type_addmode=judgement_type_addmode
-            judgement_type_addmode=0
-        elif judgement_type_addmode==6:
+        elif pre_judgement_type_addmode==6:
             print("no face："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
             cal_noface+=1
-            pre_judgement_type_addmode=judgement_type_addmode
-            # judgement_type_addmode=0
-        elif judgement_type_addmode==5.2:#注視扣分，若有扣分需要分5個方向分別計算時間
+        elif pre_judgement_type_addmode==5.2:#注視扣分，若有扣分需要分5個方向分別計算時間
             min_cal_atten+=1#注視扣分次數
             print("long time look："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
-            pre_judgement_type_addmode=judgement_type_addmode
-        elif judgement_type_addmode==8:
+        elif pre_judgement_type_addmode==8:
             cal_attenlook+=1
             print("注視觀眾："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
-            pre_judgement_type_addmode=judgement_type_addmode
-        elif judgement_type_addmode==10:
+        #身體判斷
+        if pre_judgement_type_addmode_buddy==10:
             plus_cal_deltay+=1
-            #時間的部分麻煩你我不太會這裡謝啦
-            pre_judgement_type_addmode=judgement_type_addmode
-        elif judgement_type_addmode==10.1:
+            print("位移適當："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+        elif pre_judgement_type_addmode_buddy==10.1:
             min_cal_deltay_herry+=1
-            #時間的部分麻煩你我不太會這裡謝啦
-            pre_judgement_type_addmode=judgement_type_addmode
-        elif judgement_type_addmode==10.2:
+            print("位移過快："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+        elif pre_judgement_type_addmode_buddy==10.2:
             min_cal_deltay_slow+=1
-            #時間的部分麻煩你我不太會這裡謝啦
-            pre_judgement_type_addmode=judgement_type_addmode
+            print("位移過慢："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
     start = time.time()
+    #將這次的tipe記錄成前次
+    pre_judgement_type_addmode_buddy=judgement_type_addmode_buddy
+    judgement_type_addmode_buddy=0
+    pre_judgement_type_addmode=judgement_type_addmode
+    judgement_type_addmode=0
 
     #水平翻轉攝像鏡頭
     # 轉換色彩BGR to RGB
@@ -288,12 +289,13 @@ while cap.isOpened():
             #120度(y=+-7)內視線的緩慢掃視
             #y 轉越左邊數值越負，越右邊越正，中間是0
 
-            if -15+face_y<y<15+face_y : #把臉部鎖定在120度的範圍之內(有條動,原範圍7 -7)and -5+face_x<x<5+face_x
+            if -15+face_y<y<15+face_y and -5+face_x<x<5+face_x: #把臉部鎖定在120度的範圍之內(有條動,原範圍7 -7)
                 if 3>=nose_distance>0: #頭部轉動位移在1～3度內(有條動,原範圍1 3
-                    if nose_distance_way!=pre_nose_distance_way and  nose_distance>=0.5 :#換方向+非系統跳動(>1)
+                    if nose_distance_way!=pre_nose_distance_way and  nose_distance>=1 :#換方向+非系統跳動(>1)
                         look120_scan=0
-                        
+                        print('1'+str(judgement_type_addmode))
                     else:
+                        
                         look120_scan+=1
                         if look120_scan==1:
                             chek=y
@@ -302,14 +304,18 @@ while cap.isOpened():
                         if look120_scan>10:
                             if chek-y<-1 or chek-y>1:
                                 judgement_type_addmode=7
-                                #print(  '')
+                                print(  '')
+                                print(str(judgement_type_addmode))
                             else:
                                 look120_scan=0
+                                print('2'+str(judgement_type_addmode))
                 else:
                     look120_scan=0
+                    print('3'+str(judgement_type_addmode))
             else:  
                 look120_scan=0
-            #print(str(look120_scan)+"/"+str(chek-y)+"/"+str(nose_distance)+'/'+str(nose_distance_way))
+                print('4'+str(judgement_type_addmode))
+            print(str(look120_scan)+"/"+str(chek-y)+"/"+str(nose_distance)+'/'+str(nose_distance_way))
             pre_nose_distance_way=nose_distance_way
             # if -7+face_y<y<7+face_y: #把臉部鎖定在120度的範圍之內
             #    if 3>=nose_distance>=1: #頭部轉動位移在1～3度內
@@ -322,7 +328,7 @@ while cap.isOpened():
          
             #把頭部轉向限制在一個框框內
         
-            if -5+face_y<y<5+face_y and 10+face_x>x>1+face_x:
+            if -6+face_y<y<6+face_y and 5+face_x>x>-5+face_x:
                 attention_look +=1
                 if attention_look>=20 : #設定一個時間，注視超過5次的迴圈次數
                     if attention_look>=100 :#參數帶調整
@@ -441,7 +447,7 @@ while cap.isOpened():
                 elif pre_p1-p1>0:
                     nose_distance_way=2
                 cv2.putText(image, f'nose_dis= {float(nose_distance)}', (int(500*width_ratio),int(100*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 2*width_ratio, (0, 255, 0), 2)
-                if nose_distance>=20: cv2.putText(image, 'Good! Walk around!', (int(400*width_ratio),int(50*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 2*width_ratio, (0, 255, 0), 2)
+                # if nose_distance>=20: cv2.putText(image, 'Good! Walk around!', (int(400*width_ratio),int(50*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 2*width_ratio, (0, 255, 0), 2)
             # Add the text on the image
             #cv2ImgAddText(image, "向上看", 200, 200, (255, 255, 0), 20)
             
@@ -469,23 +475,22 @@ while cap.isOpened():
             #我在想這裡會不會有跟120度加分的那個撞在一起要不要設定成沒有檢測120度在檢測位移或是反過來
             if pre_center!=0:
                 delta_center=np.abs(center-pre_center)
-                print(delta_center)
+                # print(delta_center)
                 if 1.5<delta_center<=5:
-                    judgement_type_addmode=10
+                    judgement_type_addmode_buddy=10
                     plus_for_deltay+=0.05
                     cv2.putText(image, 'move good', (int(20*width_ratio),int(650*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
                 
                 elif delta_center>20:#移動太快
-                    judgement_type_addmode=10.1
+                    judgement_type_addmode_buddy=10.1
                     min_for_deltay_herry+=0.05
                     cv2.putText(image, 'move so herry', (int(20*width_ratio),int(650*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
                 elif delta_center<=1:#移動太慢
-                    judgement_type_addmode=10.2
+                    judgement_type_addmode_buddy=10.2
                     min_for_deltay_slow+=0.05
                     cv2.putText(image, 'move so slow', (int(20*width_ratio),int(650*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
              
-            pre_center=center
-            time.sleep(0)                                           
+            pre_center=center                                          
         end = time.time()
         totalTime = end - start
         
