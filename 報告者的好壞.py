@@ -144,54 +144,20 @@ while cap.isOpened():
         print('  位移太快扣分：'+str(min_cal_deltay_herry)+'次/共'+str(min_for_deltay_herry)+'分')
         print('  位移太慢扣分：'+str(min_cal_deltay_slow)+'次/共'+str(min_for_deltay_slow)+'分')
         print('  long time one way 扣分：'+str(min_cal_atten)+'次/共'+str(min_for_atten)+'分')
- 
         print('加分變動：'+str(plus_for_atten+plus_for120+plus_for_deltay))
         print('  120掃視加分：'+str(cal_120add)+'次/共'+str(plus_for120)+'分')
         print('  注視觀眾加分：'+str(cal_attenlook)+'次/共'+str(plus_for_atten)+'分')
         print('  位移的當加分：'+str(plus_cal_deltay)+'次/共'+str(plus_for_deltay)+'分')
-        
         print('基礎分：'+str(grade_base))
         print('總分：'+str(grade_all))
         #print(judgement_type_addmode)
        
         
         break
-    #如果這次與前次tipe不一樣，記錄前一次tipe
-    if pre_judgement_type_addmode!=judgement_type_addmode :
-        
-        time_here_s=0
-        time_here_min =0
-        time_here_hr=0
-        direction_time_start=time.time()
-        time_here=direction_time_start-time_start
-        time_here = round(time_here,2)
-        time_here_s=time_here%60
-        time_here_min = time_here/60
-        time_here_min=int(time_here_min%60)
-        time_here_hr=time_here/3600
-        time_here_hr=int(time_here_hr)
-        
+    
     #所有模式的計數
-        #頭判斷
-        if pre_judgement_type_addmode==7:#120度加分模式
-            cal_120add+=1
-            print("120掃視加分："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
-            plus_for120+=1
-            
-        elif pre_judgement_type_addmode==6:
-            print("no face："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
-            cal_noface+=1
-            
-        elif pre_judgement_type_addmode==5.2:#注視扣分，若有扣分需要分5個方向分別計算時間
-            min_cal_atten+=1#注視扣分次數
-            print("long time look："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
-           
-        elif pre_judgement_type_addmode==8:
-            cal_attenlook+=1
-            print(judgement_type_addmode)
-            print("注視觀眾："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
-    if pre_judgement_type_addmode_buddy!=judgement_type_addmode_buddy :
-            
+    if pre_judgement_type_addmode!=judgement_type_addmode or pre_judgement_type_addmode_buddy!=judgement_type_addmode_buddy:
+        
         time_here_s=0
         time_here_min =0
         time_here_hr=0
@@ -203,16 +169,41 @@ while cap.isOpened():
         time_here_min=int(time_here_min%60)
         time_here_hr=time_here/3600
         time_here_hr=int(time_here_hr)
+    
+        #頭判斷
+        if pre_judgement_type_addmode!=judgement_type_addmode:
+            if pre_judgement_type_addmode==7:#120度加分模式
+                cal_120add+=1
+                print("120掃視加分："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+                plus_for120+=1
+                print(judgement_type_addmode)
+            
+            elif pre_judgement_type_addmode==6:
+                print(judgement_type_addmode)
+                print("no face："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+                cal_noface+=1
+            
+            elif pre_judgement_type_addmode==5.2:#注視扣分，若有扣分需要分5個方向分別計算時間
+                min_cal_atten+=1#注視扣分次數
+                print(judgement_type_addmode)
+                print("long time look："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+           
+            elif pre_judgement_type_addmode==8:
+                cal_attenlook+=1
+                print(judgement_type_addmode)
+                print("注視觀眾："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+        if pre_judgement_type_addmode_buddy!=judgement_type_addmode_buddy :
+            
         # 身體判斷
-        if pre_judgement_type_addmode_buddy==10:
-            plus_cal_deltay+=1
-            print("位移適當："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
-        elif pre_judgement_type_addmode_buddy==10.1:
-            min_cal_deltay_herry+=1
-            print("位移過快："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
-        elif pre_judgement_type_addmode_buddy==10.2:
-            min_cal_deltay_slow+=1
-            print("位移過慢："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+            if pre_judgement_type_addmode_buddy==10:
+                plus_cal_deltay+=1
+                print("位移適當："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+            elif pre_judgement_type_addmode_buddy==10.1:
+                min_cal_deltay_herry+=1
+                print("位移過快："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+            elif pre_judgement_type_addmode_buddy==10.2:
+                min_cal_deltay_slow+=1
+                print("位移過慢："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
     start = time.time()
     #將這次的tipe記錄成前次
     pre_judgement_type_addmode_buddy=judgement_type_addmode_buddy
@@ -342,8 +333,8 @@ while cap.isOpened():
                             
                 cv2.putText(image, f'attention =  {round((attention_look-4)/10,0)} times', (int(20*width_ratio),int(350*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
             else:#沒有在取景框當中
-                print(f'attention_look: {(attention_look)}')
-                print(f'no_atten: {(no_atten)}')
+                # print(f'attention_look: {(attention_look)}')
+                # print(f'no_atten: {(no_atten)}')
                 no_atten+=1
                 if no_atten>20:
                     attention_look=0#重新計算注視次數，代表離開太久了
