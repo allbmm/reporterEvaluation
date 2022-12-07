@@ -49,7 +49,7 @@ no_face_number=0
 #32～43為了圓餅圖的資料而設計
 
 #臉部校正數據
-face_x=12
+face_x=3.5
 face_y=0
 face_z=0
 
@@ -83,6 +83,7 @@ plus_for_atten=0 #注視恰當(注視觀眾)的加分分數
 plus_for_deltay=0#位移好加分
 min_for_deltay_herry=0#位移快扣分
 min_for_deltay_slow=0#位移慢扣分
+min_cal_deltay_sloway=0
 min_for_atten=0#注視太長的扣分分數
 #plus_cal_atten=0 #注視恰當(注視觀眾)次數
 min_cal_atten=0#注視太長的次數
@@ -142,12 +143,8 @@ while cap.isOpened():
         print('  noface扣分：'+str(cal_noface)+'次/共'+str(min_for_noface)+'分')
         print('  位移太快扣分：'+str(min_cal_deltay_herry)+'次/共'+str(min_for_deltay_herry)+'分')
         print('  位移太慢扣分：'+str(min_cal_deltay_slow)+'次/共'+str(min_for_deltay_slow)+'分')
-        print('  long time one way 扣分：'+str(min_cal_atten)+'次/n共'+str(min_for_atten)+'分')
-        print('    Left：'+str(cal_longleft)+'次')
-        print('    Right：'+str(cal_longright)+'次')
-        print('    Up：'+str(cal_longup)+'次')
-        print('    Down：'+str(cal_longdown)+'次')
-        print('    Forward：'+str(cal_longforward)+'次')
+        print('  long time one way 扣分：'+str(min_cal_atten)+'次/共'+str(min_for_atten)+'分')
+ 
         print('加分變動：'+str(plus_for_atten+plus_for120+plus_for_deltay))
         print('  120掃視加分：'+str(cal_120add)+'次/共'+str(plus_for120)+'分')
         print('  注視觀眾加分：'+str(cal_attenlook)+'次/共'+str(plus_for_atten)+'分')
@@ -160,7 +157,7 @@ while cap.isOpened():
         
         break
     #如果這次與前次tipe不一樣，記錄前一次tipe
-    if pre_judgement_type_addmode!=judgement_type_addmode or pre_judgement_type_addmode_buddy!=judgement_type_addmode_buddy:
+    if pre_judgement_type_addmode!=judgement_type_addmode :
         
         time_here_s=0
         time_here_min =0
@@ -180,16 +177,33 @@ while cap.isOpened():
             cal_120add+=1
             print("120掃視加分："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
             plus_for120+=1
+            
         elif pre_judgement_type_addmode==6:
             print("no face："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
             cal_noface+=1
+            
         elif pre_judgement_type_addmode==5.2:#注視扣分，若有扣分需要分5個方向分別計算時間
             min_cal_atten+=1#注視扣分次數
             print("long time look："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+           
         elif pre_judgement_type_addmode==8:
             cal_attenlook+=1
+            print(judgement_type_addmode)
             print("注視觀眾："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
-        #身體判斷
+    if pre_judgement_type_addmode_buddy!=judgement_type_addmode_buddy :
+            
+        time_here_s=0
+        time_here_min =0
+        time_here_hr=0
+        direction_time_start=time.time()
+        time_here=direction_time_start-time_start
+        time_here = round(time_here,2)
+        time_here_s=time_here%60
+        time_here_min = time_here/60
+        time_here_min=int(time_here_min%60)
+        time_here_hr=time_here/3600
+        time_here_hr=int(time_here_hr)
+        # 身體判斷
         if pre_judgement_type_addmode_buddy==10:
             plus_cal_deltay+=1
             print("位移適當："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
@@ -286,14 +300,12 @@ while cap.isOpened():
             #print(x,y)
             X_angle.append(x)
             Y_angle.append(y)
+            
             #120度(y=+-7)內視線的緩慢掃視
-            #y 轉越左邊數值越負，越右邊越正，中間是0
-
             if -15+face_y<y<15+face_y and -5+face_x<x<5+face_x: #把臉部鎖定在120度的範圍之內(有條動,原範圍7 -7)
                 if 3>=nose_distance>0: #頭部轉動位移在1～3度內(有條動,原範圍1 3
                     if nose_distance_way!=pre_nose_distance_way and  nose_distance>=1 :#換方向+非系統跳動(>1)
                         look120_scan=0
-                        print('1'+str(judgement_type_addmode))
                     else:
                         
                         look120_scan+=1
@@ -304,59 +316,45 @@ while cap.isOpened():
                         if look120_scan>10:
                             if chek-y<-1 or chek-y>1:
                                 judgement_type_addmode=7
-                                print(  '')
-                                print(str(judgement_type_addmode))
                             else:
                                 look120_scan=0
-                                print('2'+str(judgement_type_addmode))
                 else:
                     look120_scan=0
-                    print('3'+str(judgement_type_addmode))
             else:  
                 look120_scan=0
-                print('4'+str(judgement_type_addmode))
-            print(str(look120_scan)+"/"+str(chek-y)+"/"+str(nose_distance)+'/'+str(nose_distance_way))
             pre_nose_distance_way=nose_distance_way
-            # if -7+face_y<y<7+face_y: #把臉部鎖定在120度的範圍之內
-            #    if 3>=nose_distance>=1: #頭部轉動位移在1～3度內
-            #      judgement_type_addmode=7
-            #      delta_min += 1
-            #      look120_loop=round(delta_min/cc,2)
-            #      #print('120度的範圍次數：'+str(delta_min))
-            # cv2.putText(image, f'120/all loop= {look120_loop}', (int(20*width_ratio),int(450*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
-
-         
+    
             #把頭部轉向限制在一個框框內
-        
+           # if 
             if -6+face_y<y<6+face_y and 5+face_x>x>-5+face_x:
                 attention_look +=1
-                if attention_look>=20 : #設定一個時間，注視超過5次的迴圈次數
-                    if attention_look>=100 :#參數帶調整
-                        judgement_type_addmode=5.2
-                        min_for_atten= min_for_atten - 0.005 #注視扣分的分數
-                        min_for_atten = round(min_for_atten, 3)
-                    else:
-                        no_atten=0#no atten 歸零
-                        noface_time=0
-                        judgement_type_addmode=8
-                        plus_for_atten = plus_for_atten + 0.005#注視加分分數
-                        plus_for_atten = round(plus_for_atten, 3)
-                        direction_time = round(direction_time_end-direction_time_start, 0)
-                    
-                    cv2.putText(image, f'attention =  {round((attention_look-4)/10,0)} times', (int(20*width_ratio),int(350*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
-                    
-            else:
+                if attention_look>=200 : #設定一個時間，注視超過5次的迴圈次數
+                    judgement_type_addmode=5.2
+                    min_for_atten= min_for_atten - 0.005 #注視扣分的分數
+                    min_for_atten = round(min_for_atten, 3)
+                elif 20>attention_look:           
+                    no_atten=0#no atten 歸零
+                    noface_time=0
+                    judgement_type_addmode=8
+                    plus_for_atten = plus_for_atten + 0.005#注視加分分數
+                    plus_for_atten = round(plus_for_atten, 3)
+                    # direction_time = round(direction_time_end-direction_time_start, 0)
+                            
+                cv2.putText(image, f'attention =  {round((attention_look-4)/10,0)} times', (int(20*width_ratio),int(350*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
+            else:#沒有在取景框當中
+                print(f'attention_look: {(attention_look)}')
+                print(f'no_atten: {(no_atten)}')
                 no_atten+=1
                 if no_atten>20:
                     attention_look=0#重新計算注視次數，代表離開太久了
                     noface_time=0
-                if no_atten>100: #如果頭部不在這個取景框中一段時間（回頭打個噴嚏之類的時間很短就不會進入這個循環，因此會繼續累積注視的次數）100數值蓋
-                   judgement_type_addmode=5.2
-                   min_for_atten= min_for_atten - 0.005 #注視扣分的分數
-                   min_for_atten = round(min_for_atten, 3)
-                   cv2.putText(image, 'not attention too long', (int(20*width_ratio),int(350*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 2*width_ratio, (0,0,255), 2)
-            
-          
+                        
+                if no_atten>50: #如果頭部不在這個取景框中一段時間（回頭打個噴嚏之類的時間很短就不會進入這個循環，因此會繼續累積注視的次數）100數值蓋
+                    judgement_type_addmode=5.2
+                    min_for_atten= min_for_atten - 0.005 #注視扣分的分數
+                    min_for_atten = round(min_for_atten, 3)
+                    cv2.putText(image, 'not attention too long', (int(20*width_ratio),int(350*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 2*width_ratio, (0,0,255), 2)
+                       # print(f'min_atten:{(min_for_atten)}')
             # See where the user's head tilting
             if y < -6+face_y:
                 text = "Looking Left"
@@ -486,11 +484,15 @@ while cap.isOpened():
                     min_for_deltay_herry+=0.05
                     cv2.putText(image, 'move so herry', (int(20*width_ratio),int(650*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
                 elif delta_center<=1:#移動太慢
-                    judgement_type_addmode_buddy=10.2
-                    min_for_deltay_slow+=0.05
-                    cv2.putText(image, 'move so slow', (int(20*width_ratio),int(650*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
-             
-            pre_center=center                                          
+                    min_cal_deltay_sloway+=1
+                    if min_cal_deltay_sloway >= 20:
+                        judgement_type_addmode_buddy=10.2
+                        min_for_deltay_slow+=0.05
+                        cv2.putText(image, 'move so slow', (int(20*width_ratio),int(650*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
+                 
+            pre_center=center   
+            cv2.putText(image, f'delta center:{round((delta_center),2)}', (int(20*width_ratio),int(700*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
+                                                
         end = time.time()
         totalTime = end - start
         
@@ -517,7 +519,7 @@ while cap.isOpened():
         if noface_time!=0 and cc_for_haveface >= 100: 
             noface_time=0
 
-    elif no_face_number !=0: 
+    else:# no_face_number !=0: 
         #程式到這裡代表沒有偵測到臉，一開始程式卡頓的話不會跳出noface
 
         grade_variable=min_for_noface+min_for_atten+plus_for_atten+plus_for120
@@ -533,14 +535,14 @@ while cap.isOpened():
            cv2.putText(image,"time:"+str(int(noface_time_end-noface_time_start))+"s", (int(300*width_ratio), int(500*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 3*width_ratio, (138, 43, 226), 3)
         cv2.putText(image,"time:"+str(int(noface_time_end-noface_time_start))+"s", (int(300*width_ratio), int(500*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 3*width_ratio, (138, 43, 226), 3)
    
-        if noface_time>20:#累積（沒有找到臉）大於迴圈次數200
-            no_atten=0
-            attention_look=0    
-        if noface_time>30:
-            judgement_type_addmode=6
-            min_for_noface = min_for_noface - 0.01
-            min_for_noface = round(min_for_noface, 3)   
-            cv2.putText(image,"no face too long!!", (int(200*width_ratio),int(300*height_ratio)),cv2.FONT_HERSHEY_SIMPLEX, 4*width_ratio, (138, 42, 226), 3)
+    if noface_time>20:#累積（沒有找到臉）大於迴圈次數200
+        no_atten=0
+        attention_look=0    
+    if noface_time>30:
+        judgement_type_addmode=6
+        min_for_noface = min_for_noface - 0.01
+        min_for_noface = round(min_for_noface, 3)   
+        cv2.putText(image,"no face too long!!", (int(200*width_ratio),int(300*height_ratio)),cv2.FONT_HERSHEY_SIMPLEX, 4*width_ratio, (138, 42, 226), 3)
     
     # if noface_time_end - noface_time_start> 3:#如果累積（沒有找到臉）大於3秒那麼就會扣分
     #     #time.sleep(0.2)
@@ -551,7 +553,7 @@ while cap.isOpened():
     
     #     cv2.putText(image,"Deduct points!!", (int(200*width_ratio),int(300*height_ratio)),cv2.FONT_HERSHEY_SIMPLEX, 4*width_ratio, (138, 42, 226), 3)
     
-    if cc%20==0:
+    if cc%10==0:
         # 309～319即時顯示變化的圓餅圖
         y = np.array([len(turn_right), len(turn_left), len(turn_up), len(turn_foward), len(turn_down),len(no_face)])
         #len() 括弧裡面的字元長度
