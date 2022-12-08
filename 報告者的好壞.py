@@ -49,7 +49,7 @@ no_face_number=0
 #32～43為了圓餅圖的資料而設計
 
 #臉部校正數據
-face_x=3.5
+face_x=8
 face_y=0
 face_z=0
 
@@ -66,21 +66,13 @@ height=cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 cc=0#總共迴圈的次數
 cc_for_haveface=0#有臉的計數
 no_atten=0
-grade_all=0#所有總分，加扣分和基本分加起來
-grade_base=0#基本分數
+grade_base=''#基本分數
 plus_point=0#所有的加分分數
 min_point=0#所有的扣分分數
 
 min_for_noface=0#單獨計算noface的扣分分數
-plus_for_120=0#120加分
 plus_cal_120=0#120計次數
-
-plus_for_atten=0 #注視恰當(注視觀眾)的加分分數
-plus_for_deltay=0#位移好加分
-min_for_deltay_herry=0#位移快扣分
 min_cal_fix=0
-min_for_fix=0
-min_for_atten=0#注視太長的扣分分數
 min_cal_atten=0#注視太長的次數
 
 
@@ -113,7 +105,6 @@ direction_time=0
 
 noface_time_start=0#沒有臉的時間開始計時
 noface_time_end=0#沒臉的時間結束計時
-last_text=""#最後圓餅圖顯示的文字
 
 X_angle = []
 Y_angle = []
@@ -161,8 +152,6 @@ while cap.isOpened():
             print('  注視觀眾：'+atten)
             print('位移：'+deltay)
             print('總視線配比：'+grade_base)
-            # grade_all=plus_point-min_point+grade_base
-            # print('總分：'+str(grade_all))
             #print(judgement_type_addmode)
           
             break
@@ -187,7 +176,6 @@ while cap.isOpened():
                         print("no face："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
                     elif pre_judgement_type_addmode==5.2:#注視扣分，若有扣分需要分5個方向分別計算時間
                         print("long time look："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
-                   
                     elif pre_judgement_type_addmode==8:
                         print("注視觀眾："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
                 pre_judgement_type_addmode=judgement_type_addmode
@@ -297,11 +285,9 @@ while cap.isOpened():
                             if nose_distance_way!=pre_nose_distance_way and  nose_distance>=1 :#換方向+非系統跳動(>1)
                                 look120_scan=0
                             else:
-                                
                                 look120_scan+=1
                                 if look120_scan==1:
                                     chek=y
-                                
                                 if look120_scan>10:
                                     if chek-y<-1 or chek-y>1:
                                         judgement_type_addmode=7
@@ -318,16 +304,11 @@ while cap.isOpened():
                         attention_look +=1
                         if attention_look>=200 : #設定一個時間，注視超過5次的迴圈次數
                             judgement_type_addmode=5.2
-                            min_for_atten= min_for_atten - 0.005 #注視扣分的分數
-                            min_for_atten = round(min_for_atten, 3)
                         elif 20>attention_look:           
                             no_atten=0#no atten 歸零
                             noface_time=0
                             judgement_type_addmode=8
                             plus_cal_atten+=1
-                            plus_for_atten = plus_for_atten + 0.005#注視加分分數
-                            plus_for_atten = round(plus_for_atten, 3)
-                            # direction_time = round(direction_time_end-direction_time_start, 0)
                                     
                         cv2.putText(image, f'attention =  {round((attention_look-4)/10,0)} times', (int(20*width_ratio),int(350*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
                     else:#沒有在取景框當中
@@ -339,35 +320,27 @@ while cap.isOpened():
                         if no_atten>50: #如果頭部不在這個取景框中一段時間（回頭打個噴嚏之類的時間很短就不會進入這個循環，因此會繼續累積注視的次數）100數值蓋
                             judgement_type_addmode=5.2
                             min_cal_atten+=1
-                            min_for_atten += 0.005 #注視扣分的分數
-                            min_for_atten = round(min_for_atten, 3)
                             cv2.putText(image, 'not attention too long', (int(20*width_ratio),int(350*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 2*width_ratio, (0,0,255), 2)
                          
-                    if y < -6+face_y:
+                    if y < -10+face_y:
                         text = "Looking Left"
                         num1=num1+1
                         direction_time_end=time.time()
                         turn_left.append(num1)
-                      
                          
-                         
-                    elif y > 6+face_y:
+                    elif y > 10+face_y:
                         text = "Looking Right"
                         num2=num2+1
                         direction_time_end=time.time()
                         #print(num2)
                         turn_right.append(num2)
-                        
-                  
                          
                     elif x < -5+face_x:
                         minues = -1
                         text = "Looking Down"
                         num3=num3+1
                         direction_time_end=time.time()
-                       
                         turn_down.append(num3)
-        
                          
                     elif x > 5+face_x:
                         text = "Looking Up"
@@ -380,11 +353,6 @@ while cap.isOpened():
                        num5=num5+1
                        direction_time_end=time.time()
                        turn_foward.append(num5)
-                       
-                       # if judgement_type!=5:#如果之前的面部朝向不是向前這個類型就重新開始累積向前的時間
-                       #     direction_time_start=time.time()#開始進行朝向前面的時間計時
-                       #     direction_time_end=0#把之前不管是怎樣面部朝向的累積時間清零
-                       #     judgement_type=5
                        
                     # Display the nose direction
                     nose_3d_projection, jacobian = cv2.projectPoints(nose_3d, rot_vec, trans_vec, cam_matrix, dist_matrix)
@@ -453,9 +421,6 @@ while cap.isOpened():
                 
                 fps = 1 / totalTime
                 
-                plus_point=round(plus_for_atten+plus_for_120+plus_for_deltay,3)
-                min_point=round(min_for_noface+min_for_atten+min_for_deltay_herry+min_for_fix,3)
-                grade_variable=round(min_point+plus_point,3)
                 #print("FPS: ", fps)
                 #cv2.putText(image, f'basic point: {int(grade_base)}', (20,500), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0,255,0), 2)
                 # cv2.putText(image, f'minus point: {float(min_point)}', (int(20*width_ratio),int(550*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
@@ -470,18 +435,16 @@ while cap.isOpened():
                             connection_drawing_spec=drawing_spec)
                 pre_p1=p1
                 #從noface狀態轉換到有face狀態後，計算有face維持多久，若有足夠時間，即重新計算noface_time
-                if noface_time!=0 and cc_for_haveface >= 100: 
+                if noface_time!=0 and cc_for_haveface >= 10: 
                     noface_time=0
         
             else:# no_face_number !=0: 
                 #程式到這裡代表沒有偵測到臉，一開始程式卡頓的話不會跳出noface
-        
-                # grade_variable=min_for_noface+min_for_atten+plus_for_atten+plus_for120
                 no_face_number = no_face_number +1 #for 圓餅圖
                 
                 noface_time+=1
                 no_face.append(no_face_number)
-                cv2.putText(image, "no face!!!" , (int(300*width_ratio), int(100*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 4, (138, 43, 226), 10)
+                cv2.putText(image, "no face!!!" , (int(150*width_ratio), int(200*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 4, (138, 43, 226), 10)
                 #cv2.putText(image, "plus = 0" , (300, 200), cv2.FONT_HERSHEY_SIMPLEX, 4, (138, 43, 226), 10)
                 #cv2.putText(image, "Grade = " + str(grade/100) , (300, 350), cv2.FONT_HERSHEY_SIMPLEX, 3, (138, 43, 226), 10)
                 noface_time_end=time.time()
@@ -497,7 +460,7 @@ while cap.isOpened():
                 judgement_type_addmode=6
                 # min_for_noface += 0.01
                 # min_for_noface = round(min_for_noface, 3)   
-                cv2.putText(image,"no face too long!!", (int(200*width_ratio),int(300*height_ratio)),cv2.FONT_HERSHEY_SIMPLEX, 4*width_ratio, (138, 42, 226), 3)
+                cv2.putText(image,"no face too long!!", (int(100*width_ratio),int(300*height_ratio)),cv2.FONT_HERSHEY_SIMPLEX, 4*width_ratio, (138, 42, 226), 3)
             
             # if cc%10==0:
             #     # 309～319即時顯示變化的圓餅圖
@@ -547,11 +510,10 @@ y = np.array([len(turn_right), len(turn_left), len(turn_up), len(turn_foward), l
     #len() 括弧裡面的字元長度
 plt.pie(y,
         labels=['Looking Right','Looking Left','Looking Up','Forward','Looking Down','no_face'], # 设置饼图标签
-        colors=["#65a479", "#d5695d", "#5d8ca8", "#FF5151", "#a564c9","#FFFFBB"], # 设置饼图颜色
+        colors=[ "#d5695d", "#5d8ca8", "#FF5151","#65a479", "#a564c9","#FFFFBB"], # 设置饼图颜色
         explode=(0, 0, 0, 0, 0,0), # 第二部分突出显示，值越大，距离中心越远
         autopct='%.2f%%')
-plt.title("Final Result"+"\namong of grade ="+str(grade_all)+" \n\n"+last_text)
-#plt.title("among of grade ="+str(grade_all),loc="center")
+plt.title("Final Result")
 #plt.savefig('C:/Users/to4/Desktop/111-1/hf/data/headpose_Pie_chart.jpg') #綠色這裡要改成自己要存的地方資料夾
 plt.show()
 
