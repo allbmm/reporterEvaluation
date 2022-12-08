@@ -10,7 +10,7 @@ import pandas as pd
 import time
 import scipy.stats as st
 import math
-from PIL import Image ,ImageDraw,ImageFont
+from PIL import Image ,ImageDraw,ImageFont 
 #%%
 
 chek=0
