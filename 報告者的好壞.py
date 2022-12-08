@@ -27,8 +27,8 @@ mp_drawing = mp.solutions.drawing_utils#繪圖方法
 
 drawing_spec = mp_drawing.DrawingSpec(thickness=1, circle_radius=1)#繪圖參數設定
 
-#cap = cv2.VideoCapture(0)
-cap = cv2.VideoCapture('/Users/bingjun/Downloads/廉政不好.mp4')
+cap = cv2.VideoCapture(0)
+#cap = cv2.VideoCapture('/Users/bingjun/Downloads/廉政不好.mp4')
 #cap = cv2.VideoCapture('C:/Users/to4/Desktop/111-1/hf/vidio/IMG_9422.mp4')
 #cap = cv2.VideoCapture('/C:/Users/to4/Desktop/111-1/hf/vidio/690566673.976856.mp4')
 #cap = cv2.VideoCapture('C:/Users/to4/Desktop/111-1/hf/vidio/1.mp4')
@@ -144,7 +144,7 @@ while cap.isOpened():
             #print(judgement_type_addmode)
           
             break
-        if cc%7==0 and success==True:
+        if success==True :#and cc%7==0 :
             #所有模式的計數
             if pre_judgement_type_addmode!=judgement_type_addmode or pre_judgement_type_body!=judgement_type_body:
                 time_here_s=0
@@ -154,7 +154,6 @@ while cap.isOpened():
                 time_here=direction_time_start-time_start
                 #time_here = time_here
                 time_here_s=int(time_here%60)
-                print(time_here_s)
                 time_here_min = int(time_here/60)%60
                 time_here_hr=int(time_here/3600)
             
