@@ -131,7 +131,7 @@ while cap.isOpened():
             else:
                 noatten='尚可'
             if  plus_cal_deltay*10>=min_cal_fix+min_cal_deltay_herry or min_cal_fix+min_cal_deltay_herry==0:#位移
-                deltay='優'
+                deltay='優'#位移
             else:
                 deltay='劣'
             if cal_noface/cc>=1/10:#no face
@@ -140,7 +140,7 @@ while cap.isOpened():
                 noface='無'
             else:
                 noface='尚可'
-            if  plus_cal_120>0:#位移
+            if  plus_cal_120>0:#120掃視
                 scen='優'
             else:
                 scen='無'
