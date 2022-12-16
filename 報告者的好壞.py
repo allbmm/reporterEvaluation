@@ -102,6 +102,10 @@ fix_cal_body=0#修正快速跳動的問題
 direction_time_start=0#臉部朝向的累積開始時間
 direction_time_end=0#臉部朝向的累積結束時間
 direction_time=0
+acc_center=0#計算前後位移的變化（加速度）
+pre_delta_center=0#前一次的位移量
+cal_delta_center=0#計算加速度的變化次數
+pose_center=0#以加速度的變化太大的次數，計算一個pose的量值
 
 noface_time_start=0#沒有臉的時間開始計時
 noface_time_end=0#沒臉的時間結束計時
@@ -130,10 +134,7 @@ while cap.isOpened():
                 noatten='無'
             else:
                 noatten='尚可'
-            if  plus_cal_deltay*10>=min_cal_fix+min_cal_deltay_herry or min_cal_fix+min_cal_deltay_herry==0:#位移
-                deltay='優'#位移
-            else:
-                deltay='劣'
+           
             if cal_noface/cc>=1/10:#no face
                 noface='過多'
             elif cal_noface==0:
@@ -144,13 +145,17 @@ while cap.isOpened():
                 scen='優'
             else:
                 scen='無'
+            if  pose_center>0:#pose
+                pose='優'
+            else:
+                pose='無'
             print('待改進項')
             print('  noface：'+noface)
             print('  長時間注視：'+noatten)
             print('優秀項目：')
             print('  120掃視：'+scen)
             print('  注視觀眾：'+atten)
-            print('位移：'+deltay)
+            print('肢體動作:'+pose)#+'/總觀察次數:'+str(int(cc/4)))
             print('總視線配比：'+grade_base)
             #print(judgement_type_addmode)
           
@@ -182,17 +187,17 @@ while cap.isOpened():
                 judgement_type_addmode=0
         
                 # 身體判斷        
-                if pre_judgement_type_body!=judgement_type_body :
+                # if pre_judgement_type_body!=judgement_type_body :
                 
-                    if pre_judgement_type_body==10:
-                        print("位移適當："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
-                    elif pre_judgement_type_body==10.1:
-                        print("位移過快："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
-                    elif pre_judgement_type_body==10.2:
-                        print("長時間位移趨近於0："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+                #     if pre_judgement_type_body==10:
+                #         print("位移適當："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+                #     elif pre_judgement_type_body==10.1:
+                #         print("位移過快："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+                #     elif pre_judgement_type_body==10.2:
+                #         print("長時間位移趨近於0："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
                
-                pre_judgement_type_body=judgement_type_body
-                judgement_type_body=0
+                # pre_judgement_type_body=judgement_type_body
+                # judgement_type_body=0
             
             
             start = time.time()
@@ -393,26 +398,34 @@ while cap.isOpened():
                         cv2.putText(image, f'asex:{center}', 
                                 tuple(np.multiply(nose,[wight,height]).astype(int)), 
                                 cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
-                   
+                        
                         if pre_center!=0:
                             delta_center=np.abs(center-pre_center)
                             # print(delta_center)
-                            if 2<delta_center<=20: 
-                                if fix_cal_body<=2:
-                                    plus_cal_deltay+=1
-                                    cv2.putText(image, 'move good', (int(20*width_ratio),int(650*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
-                                fix_cal_body=0
-                            elif delta_center>20:
-                                if fix_cal_body<=2:#移動太快
-                                    min_cal_deltay_herry++1
-                                    cv2.putText(image, 'move so herry', (int(20*width_ratio),int(650*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
-                                fix_cal_body=0
-                            else:
-                                fix_cal_body+=1
-                                cv2.putText(image, f'fix_cal_body:{(fix_cal_body)}', (int(100*width_ratio),int(650*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
-                                if  fix_cal_body>30:
-                                    min_cal_fix+=1
-                        pre_center=center   
+                            # if 2<delta_center<=20: 
+                            #     if fix_cal_body<=2:
+                            #         plus_cal_deltay+=1
+                            #         cv2.putText(image, 'move good', (int(20*width_ratio),int(650*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
+                            #     fix_cal_body=0
+                            
+                            # elif delta_center>2:
+                            #     fix_cal_body+=1
+                            #     cv2.putText(image, f'fix_cal_body:{(fix_cal_body)}', (int(100*width_ratio),int(650*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
+                            #     if  fix_cal_body>30:
+                            #         min_cal_fix+=1
+                            if pre_delta_center!=0:
+                                acc_center = np.abs(pre_delta_center-delta_center)
+                                if acc_center > 1:
+                                    cal_delta_center+=1
+                                    if cal_delta_center>4:
+                                        pose_center+=1
+                                        
+                                        cal_delta_center=0
+                            cv2.putText(image, f'body_lan:{(int(pose_center))}', (int(100*width_ratio),int(650*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
+                                                   
+                                    
+                        pre_center=center
+                        pre_delta_center=delta_center
                     cv2.putText(image, f'delta center:{round((delta_center),2)}', (int(20*width_ratio),int(700*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
                                                         
                 end = time.time()
