@@ -313,6 +313,7 @@ while cap.isOpened():
                             no_atten=0#no atten 歸零
                             noface_time=0
                             judgement_type_addmode=8
+                        else:
                             plus_cal_atten+=1
                                     
                         cv2.putText(image, f'attention =  {round((attention_look-4)/10,0)} times', (int(20*width_ratio),int(500*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
