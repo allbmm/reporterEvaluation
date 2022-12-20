@@ -27,7 +27,7 @@ mp_drawing = mp.solutions.drawing_utils#繪圖方法
 
 drawing_spec = mp_drawing.DrawingSpec(thickness=1, circle_radius=1)#繪圖參數設定
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 #cap = cv2.VideoCapture('/Users/bingjun/Downloads/廉政不好.mp4')
 #cap = cv2.VideoCapture('C:/Users/to4/Desktop/111-1/hf/vidio/IMG_9422.mp4')
 #cap = cv2.VideoCapture('/C:/Users/to4/Desktop/111-1/hf/vidio/690566673.976856.mp4')
@@ -49,7 +49,7 @@ no_face_number=0
 #32～43為了圓餅圖的資料而設計
 
 #臉部校正數據
-face_x=8
+face_x=0
 face_y=0
 face_z=0
 
@@ -150,12 +150,12 @@ while cap.isOpened():
             else:
                 pose='無'
             print('待改進項')
-            print('  noface：'+noface)
-            print('  長時間注視：'+noatten)
+            print('  無法偵測臉部：'+noface)
+            print('  注意力分散：'+noatten)
             print('優秀項目：')
-            print('  120掃視：'+scen)
+            print('  視線平均分散：'+scen)
             print('  注視觀眾：'+atten)
-            print('肢體動作:'+pose)#+'/總觀察次數:'+str(int(cc/4)))
+            print('肢體動作:'+str(pose_center))#+'/總觀察次數:'+str(int(cc/4)))#+'/總觀察次數:'+str(int(cc/4)))
             print('總視線配比：'+grade_base)
             #print(judgement_type_addmode)
           
@@ -176,11 +176,11 @@ while cap.isOpened():
                 if pre_judgement_type_addmode!=judgement_type_addmode:
                     if pre_judgement_type_addmode==7:#120度加分模式
                         plus_cal_120+=1
-                        print("120掃視加分："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+                        print("視線平均分散："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
                     elif pre_judgement_type_addmode==6:
-                        print("no face："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+                        print("無法偵測臉部："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
                     elif pre_judgement_type_addmode==5.2:#注視扣分，若有扣分需要分5個方向分別計算時間
-                        print("long time look："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
+                        print("注意力分散："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
                     elif pre_judgement_type_addmode==8:
                         print("注視觀眾："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
                 pre_judgement_type_addmode=judgement_type_addmode
@@ -305,7 +305,7 @@ while cap.isOpened():
                     pre_nose_distance_way=nose_distance_way
             
                     #把頭部轉向限制在一個框框內
-                    if -6+face_y<y<6+face_y and 5+face_x>x>-5+face_x:
+                    if -6+face_y<y<12+face_y and 2.5+face_x>x>-5+face_x:
                         attention_look +=1
                         if attention_look>=200 : #設定一個時間，注視超過5次的迴圈次數
                             judgement_type_addmode=5.2
@@ -325,29 +325,29 @@ while cap.isOpened():
                         if no_atten>50: #如果頭部不在這個取景框中一段時間（回頭打個噴嚏之類的時間很短就不會進入這個循環，因此會繼續累積注視的次數）100數值蓋
                             judgement_type_addmode=5.2
                             min_cal_atten+=1
-                            cv2.putText(image, 'not attention too long', (int(20*width_ratio),int(350*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 2*width_ratio, (0,0,255), 2)
+                            cv2.putText(image, ' inattention too long', (int(20*width_ratio),int(350*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 2*width_ratio, (0,0,255), 2)
                          
-                    if y < -10+face_y:
+                    if y < -4+face_y:
                         text = "Looking Left"
                         num1=num1+1
                         direction_time_end=time.time()
                         turn_left.append(num1)
                          
-                    elif y > 10+face_y:
+                    elif y > 9+face_y:
                         text = "Looking Right"
                         num2=num2+1
                         direction_time_end=time.time()
                         #print(num2)
                         turn_right.append(num2)
                          
-                    elif x < -5+face_x:
+                    elif x < -3.5+face_x:
                         minues = -1
                         text = "Looking Down"
                         num3=num3+1
                         direction_time_end=time.time()
                         turn_down.append(num3)
                          
-                    elif x > 5+face_x:
+                    elif x > 6+face_x:
                         text = "Looking Up"
                         num4=num4+1
                         direction_time_end=time.time()
@@ -376,7 +376,7 @@ while cap.isOpened():
                             nose_distance_way=1
                         elif pre_p1-p1>0:
                             nose_distance_way=2
-                        cv2.putText(image, f'nose_dis= {float(nose_distance)}', (int(500*width_ratio),int(100*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 2*width_ratio, (0, 255, 0), 2)
+                        #cv2.putText(image, f'nose_dis= {float(nose_distance)}', (int(500*width_ratio),int(100*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 2*width_ratio, (0, 255, 0), 2)
                     
                     cv2.putText(image, text, (int(20*width_ratio),int(50*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 2*width_ratio, (0, 255, 0), 2)
                     #cv2.putText(要放文字的視窗，要放的文字，要放置的座標，字體（不用理他），字體大小，rgb的顏色，字體粗細)
@@ -395,9 +395,9 @@ while cap.isOpened():
                         
                         #print(float(leftshoulder[0])*img_h)#橫向位移（畫面的寬度為單位）#+rightshoulder[1,0])/2)
                         center=round((float(leftshoulder[0])*img_h+float(rightshoulder[0])*img_h)/2,2)
-                        cv2.putText(image, f'asex:{center}', 
-                                tuple(np.multiply(nose,[wight,height]).astype(int)), 
-                                cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+                        #cv2.putText(image, f'asex', 
+                                #tuple(np.multiply(nose,[wight,height]).astype(int)), 
+                                #cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
                         
                         if pre_center!=0:
                             delta_center=np.abs(center-pre_center)
@@ -421,12 +421,12 @@ while cap.isOpened():
                                         pose_center+=1
                                         
                                         cal_delta_center=0
-                            cv2.putText(image, f'body_lan:{(int(pose_center))}', (int(100*width_ratio),int(650*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
+                            cv2.putText(image, f'BODY MOVEMENTS:{(int(pose_center))}', (int(100*width_ratio),int(650*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
                                                    
                                     
                         pre_center=center
                         pre_delta_center=delta_center
-                    cv2.putText(image, f'delta center:{round((delta_center),2)}', (int(20*width_ratio),int(700*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
+                    #cv2.putText(image, f'delta center:{round((delta_center),2)}', (int(20*width_ratio),int(700*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
                                                         
                 end = time.time()
                 totalTime = end - start
@@ -529,6 +529,5 @@ plt.pie(y,
 plt.title("Final Result")
 #plt.savefig('C:/Users/to4/Desktop/111-1/hf/data/headpose_Pie_chart.jpg') #綠色這裡要改成自己要存的地方資料夾
 plt.show()
-
 
 
