@@ -41,10 +41,13 @@ turn_up = []
 turn_foward = []
 no_face= []
 num1=0
+prnum1=0
 num2=0
+prnum2=0
 num3=0
 num4=0
 num5=0
+prnum5=0
 no_face_number=0
 #32～43為了圓餅圖的資料而設計
 
@@ -54,14 +57,20 @@ face_y=0
 face_z=0
 
 #計數器
+cal_bueaty=0#平均看所有方向
+
 cal_noface=0
 prcal_noface=0
+
 plus_cal_atten=0
 prplus_cal_atten=0
+
 min_cal_atten=0#注視太長的次數
 prmin_cal_atten=0#注視太長的次數
+
 plus_cal_120=0#120計次數
 prplus_cal_120=0
+
 pose_center=0#以加速度的變化太大的次數，計算一個pose的量值
 prpose_center=0
 
@@ -76,46 +85,32 @@ prplus_cal_120_2=0
 prplus_cal_120_3=0
 prpose_center_2=0
 prpose_center_3=0
+prnum5_2=0
+prnum2_2=0
+prnum1_2=0
+prnum5_3=0
+prnum2_3=0
+prnum1_3=0
 
 width_ratio=cap.get(cv2.CAP_PROP_FRAME_WIDTH)/1280
 height_ratio=cap.get(cv2.CAP_PROP_FRAME_HEIGHT)/720
-wight=cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-height=cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 
 cc=0#總共迴圈的次數
 cc_for_haveface=0#有臉的計數
-no_atten=0
-grade_base=''#基本分數
-
-cal_bueaty=0#平均看所有方向
-beauty=''#是否有平均看項所有方向
 
 noface_time=0
 pre_p1=0#前一次的鼻頭座標
 center=0#肩膀中心座標center
 pre_center=0#之前的中心座標
 delta_center=0#中心座標的改變量
-plus_cal_deltay=0#計算位移加分的次數
-min_cal_deltay_herry=0#計算位移太快的扣分次數
-min_cal_deltay_slow=0#計算位移太慢的扣分次數
 nose_distance=0#鼻頭的位移、轉動量值
 nose_distance_way=0#鼻頭轉動方向
 pre_nose_distance_way=0#上一次鼻頭轉動方向
 
-delta_min=0#數有多少次的緩慢移動頭部
-look120_loop=0#到目前為止，delta_min的比例
 attention_look=0#注視次數累積
+no_atten=0
 look120_scan=0#120掃視
 
-# judgement_type=0#0:什麼都沒有；12345:臉部朝向一個方向的累積 8注視扣分 5.2注視加分 6noface扣分 10 位移加分 10.1位移太快扣分
-pre_judgement_type_addmode=0#之前的判斷
-judgement_type_addmode=0#判斷是否為同個加分模式
-pre_judgement_type_body=0
-judgement_type_body=0
-fix_cal_body=0#修正快速跳動的問題
-direction_time_start=0#臉部朝向的累積開始時間
-direction_time_end=0#臉部朝向的累積結束時間
-direction_time=0
 acc_center=0#計算前後位移的變化（加速度）
 pre_delta_center=0#前一次的位移量
 cal_delta_center=0#計算加速度的變化次數
@@ -147,7 +142,6 @@ while cap.isOpened():
                 noatten='無'
             else:
                 noatten='尚可'
-           
             if cal_noface/cc>=1/10:#no face
                 noface='過多'
             elif cal_noface==0:
@@ -162,15 +156,23 @@ while cap.isOpened():
                 pose='優'
             else:
                 pose='無'
+            if num5+num2>num1 and num2+num1>num5 and num5+num1>num2 and (num5+num2+num1)/cc>=7/10:#圓餅圖漂亮與否
+                beauty = '有'
+            else:
+                beauty = '無'
+            if num5/cc>=7/10:#是否只盯著前方的觀眾
+                grade_base = '有'
+            else :
+                grade_base = '無'
             
             print('待改進項：')
-            print('  無法偵測臉部：'+noface)
-            print('  注意力分散：'+noatten)
+            print('  無法偵測臉部：'+noface)#
+            print('  注意力分散：'+noatten)#
             print('  幾乎注視著前方：'+grade_base)
             print('優秀項目：')
             print('  過程中平均分配視線：' +beauty)
-            print('  慢速看向所有觀眾：'+scen)
-            print('  注視觀眾：'+atten)
+            print('  慢速看向所有觀眾：'+scen)#
+            print('  注視觀眾：'+atten)#
             print('肢體動作:'+str(pose_center))#+'/總觀察次數:'+str(int(cc/4)))#+'/總觀察次數:'+str(int(cc/4)))
             break
         if cc%100==0 :
@@ -200,6 +202,14 @@ while cap.isOpened():
                     scen='優'
                 else:
                     scen='無'
+                if prnum5+prnum2>prnum1 and prnum2+prnum1>prnum5 and prnum5+prnum1>prnum2 and (prnum5+prnum2+prnum1)/300>=7/10:#圓餅圖漂亮與否
+                    beauty = '有'
+                else:
+                    beauty = '無'
+                if prnum5/300>=7/10:#是否只盯著前方的觀眾
+                    grade_base = '有'
+                else :
+                    grade_base = '無'
             
                 print('待改進項：')
                 print('  無法偵測臉部：'+noface)
@@ -218,33 +228,34 @@ while cap.isOpened():
             prcal_noface=prcal_noface_2
             prplus_cal_120=prplus_cal_120_2
             prpose_center=prpose_center_2
+            prnum5=prnum5_2
+            prnum2=prnum2_2
+            prnum1=prnum1_2
+            #print(prpose_center)
             #100~200
             prplus_cal_atten_2=prplus_cal_atten_3
             prmin_cal_atten_2=prmin_cal_atten_3
             prcal_noface_2=prcal_noface_3
             prplus_cal_120_2=prplus_cal_120_3
             prpose_center_2=prpose_center_3
+            prnum5=prnum5_3
+            prnum2=prnum2_3
+            prnum1=prnum1_3
+            #print(prpose_center_2)
             #200~300
             prplus_cal_atten_3=plus_cal_atten
             prmin_cal_atten_3=min_cal_atten
             prcal_noface_3=cal_noface
             prplus_cal_120_3=plus_cal_120
             prpose_center_3=pose_center
+            prnum5=num5
+            prnum2=num2
+            prnum1=num1
+            #print(prpose_center_3)
 
         if success==True :#and cc%7==0 :
-            #所有模式的計數
-            if pre_judgement_type_addmode!=judgement_type_addmode :
-            
-                #頭判斷
-                if pre_judgement_type_addmode!=judgement_type_addmode:
-                    if pre_judgement_type_addmode==7:#120度加分模式
-                        plus_cal_120+=1
-                pre_judgement_type_addmode=judgement_type_addmode
-                judgement_type_addmode=0
-            
-            
+
             start = time.time()
-            
             
             #水平翻轉攝像鏡頭
             # 轉換色彩BGR to RGB
@@ -338,7 +349,7 @@ while cap.isOpened():
                                     chek=y
                                 if look120_scan>10:
                                     if chek-y<-1 or chek-y>1:
-                                        judgement_type_addmode=7
+                                        plus_cal_120+=1
                                     else:
                                         look120_scan=0
                         else:
@@ -434,13 +445,8 @@ while cap.isOpened():
                         nose=np.array([landmarks[mp_holistic.PoseLandmark.NOSE.value].x,landmarks[mp_holistic.PoseLandmark.NOSE.value].y])
                         leftshoulder = np.array([landmarks[mp_holistic.PoseLandmark.LEFT_SHOULDER.value].x,landmarks[mp_holistic.PoseLandmark.LEFT_SHOULDER.value].y])
                         rightshoulder = np.array([landmarks[mp_holistic.PoseLandmark.RIGHT_SHOULDER.value].x,landmarks[mp_holistic.PoseLandmark.RIGHT_SHOULDER.value].y])
-                        #print(float(leshoulder[1])*img_w)#直向位移
-                        
-                        #print(float(leftshoulder[0])*img_h)#橫向位移（畫面的寬度為單位）#+rightshoulder[1,0])/2)
                         center=round((float(leftshoulder[0])*img_h+float(rightshoulder[0])*img_h)/2,2)
-                        #cv2.putText(image, f'asex', 
-                                #tuple(np.multiply(nose,[wight,height]).astype(int)), 
-                                #cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+
                         
                         if pre_center!=0:
                             delta_center=np.abs(center-pre_center)
@@ -457,8 +463,7 @@ while cap.isOpened():
                                     
                         pre_center=center
                         pre_delta_center=delta_center
-                    #cv2.putText(image, f'delta center:{round((delta_center),2)}', (int(20*width_ratio),int(700*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
-                                                        
+                    
                 end = time.time()
                 totalTime = end - start
                 
@@ -510,15 +515,7 @@ while cap.isOpened():
             #判斷基本分
              #total=num1+num2+num3+num4+num5+no_face_number
             
-            if num5+num2>num1 and num2+num1>num5 and num5+num1>num2 and (num5+num2+num1)/cc>=7/10:
-                beauty = '有'#圓餅圖漂亮與否
-            else:
-                beauty = '無'
-                
-            if num5/cc>=7/10:#是否只盯著前方的觀眾
-                grade_base = '有'
-            else :
-                grade_base = '無'
+
 XX_angle = pd.DataFrame(X_angle)
 YY_angle = pd.DataFrame(Y_angle)
 XY_angle = pd.DataFrame(XX_angle)
