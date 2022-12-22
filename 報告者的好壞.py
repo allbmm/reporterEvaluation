@@ -27,10 +27,10 @@ mp_drawing = mp.solutions.drawing_utils#繪圖方法
 
 drawing_spec = mp_drawing.DrawingSpec(thickness=1, circle_radius=1)#繪圖參數設定
 
-cap = cv2.VideoCapture(1)
-#cap = cv2.VideoCapture('/Users/bingjun/Downloads/廉政不好.mp4')
+#cap = cv2.VideoCapture(1)
+#cap = cv2.VideoCapture('/Users/bingjun/Downloads/690566674.058419.mp4')
 #cap = cv2.VideoCapture('C:/Users/to4/Desktop/111-1/hf/vidio/IMG_9422.mp4')
-#cap = cv2.VideoCapture('/C:/Users/to4/Desktop/111-1/hf/vidio/690566673.976856.mp4')
+cap = cv2.VideoCapture('/C:/Users/to4/Desktop/111-1/hf/vidio/690566673.976856.mp4')
 #cap = cv2.VideoCapture('C:/Users/to4/Desktop/111-1/hf/vidio/1.mp4')
 
 
@@ -49,14 +49,33 @@ no_face_number=0
 #32～43為了圓餅圖的資料而設計
 
 #臉部校正數據
-face_x=0
+face_x=5
 face_y=0
 face_z=0
 
 #計數器
 cal_noface=0
-
+prcal_noface=0
 plus_cal_atten=0
+prplus_cal_atten=0
+min_cal_atten=0#注視太長的次數
+prmin_cal_atten=0#注視太長的次數
+plus_cal_120=0#120計次數
+prplus_cal_120=0
+pose_center=0#以加速度的變化太大的次數，計算一個pose的量值
+prpose_center=0
+
+#紀錄器
+prplus_cal_atten_2=0
+prplus_cal_atten_3=0
+prmin_cal_atten_2=0
+prmin_cal_atten_3=0
+prcal_noface_2=0
+prcal_noface_3=0
+prplus_cal_120_2=0
+prplus_cal_120_3=0
+prpose_center_2=0
+prpose_center_3=0
 
 width_ratio=cap.get(cv2.CAP_PROP_FRAME_WIDTH)/1280
 height_ratio=cap.get(cv2.CAP_PROP_FRAME_HEIGHT)/720
@@ -67,14 +86,9 @@ cc=0#總共迴圈的次數
 cc_for_haveface=0#有臉的計數
 no_atten=0
 grade_base=''#基本分數
-plus_point=0#所有的加分分數
-min_point=0#所有的扣分分數
 
-min_for_noface=0#單獨計算noface的扣分分數
-plus_cal_120=0#120計次數
-min_cal_fix=0
-min_cal_atten=0#注視太長的次數
-
+cal_bueaty=0#平均看所有方向
+beauty=''#是否有平均看項所有方向
 
 noface_time=0
 pre_p1=0#前一次的鼻頭座標
@@ -105,7 +119,6 @@ direction_time=0
 acc_center=0#計算前後位移的變化（加速度）
 pre_delta_center=0#前一次的位移量
 cal_delta_center=0#計算加速度的變化次數
-pose_center=0#以加速度的變化太大的次數，計算一個pose的量值
 
 noface_time_start=0#沒有臉的時間開始計時
 noface_time_end=0#沒臉的時間結束計時
@@ -149,55 +162,85 @@ while cap.isOpened():
                 pose='優'
             else:
                 pose='無'
-            print('待改進項')
+            
+            print('待改進項：')
             print('  無法偵測臉部：'+noface)
             print('  注意力分散：'+noatten)
+            print('  幾乎注視著前方：'+grade_base)
             print('優秀項目：')
-            print('  視線平均分散：'+scen)
+            print('  過程中平均分配視線：' +beauty)
+            print('  慢速看向所有觀眾：'+scen)
             print('  注視觀眾：'+atten)
             print('肢體動作:'+str(pose_center))#+'/總觀察次數:'+str(int(cc/4)))#+'/總觀察次數:'+str(int(cc/4)))
-            print('總視線配比：'+grade_base)
-            #print(judgement_type_addmode)
-          
             break
+        if cc%100==0 :
+            if cc>=300:
+                prplus_cal_atten=plus_cal_atten-prplus_cal_atten
+                prmin_cal_atten=min_cal_atten-prmin_cal_atten
+                prcal_noface=cal_noface-prcal_noface
+                prplus_cal_120=plus_cal_120-prplus_cal_120
+                prpose_center=pose_center-prpose_center
+                if prplus_cal_atten/300>=1/10:#注視觀眾
+                    atten='優'
+                else:
+                    atten='劣'
+                if prmin_cal_atten/300>=1/10:#no atten
+                    noatten='過多'
+                elif prmin_cal_atten==0:
+                    noatten='無'
+                else:
+                    noatten='尚可'
+                if prcal_noface/300>=1/10:#no face
+                    noface='過多'
+                elif prcal_noface==0:
+                    noface='無'
+                else:
+                    noface='尚可'
+                if  prplus_cal_120>0:#120掃視
+                    scen='優'
+                else:
+                    scen='無'
+            
+                print('待改進項：')
+                print('  無法偵測臉部：'+noface)
+                print('  注意力分散：'+noatten)
+                print('  幾乎注視著前方：'+grade_base)
+                print('優秀項目：')
+                print('  過程中平均分配視線：' +beauty)
+                print('  慢速看向所有觀眾：'+scen)
+                print('  注視觀眾：'+atten)
+                print('肢體動作:'+str(prpose_center))#+'/總觀察次數:'+str(int(cc/4)))#+'/總觀察次數:'+str(int(cc/4)))
+                print(' ')
+            
+            #pr ~100
+            prplus_cal_atten=prplus_cal_atten_2
+            prmin_cal_atten=prmin_cal_atten_2
+            prcal_noface=prcal_noface_2
+            prplus_cal_120=prplus_cal_120_2
+            prpose_center=prpose_center_2
+            #100~200
+            prplus_cal_atten_2=prplus_cal_atten_3
+            prmin_cal_atten_2=prmin_cal_atten_3
+            prcal_noface_2=prcal_noface_3
+            prplus_cal_120_2=prplus_cal_120_3
+            prpose_center_2=prpose_center_3
+            #200~300
+            prplus_cal_atten_3=plus_cal_atten
+            prmin_cal_atten_3=min_cal_atten
+            prcal_noface_3=cal_noface
+            prplus_cal_120_3=plus_cal_120
+            prpose_center_3=pose_center
+
         if success==True :#and cc%7==0 :
             #所有模式的計數
-            if pre_judgement_type_addmode!=judgement_type_addmode or pre_judgement_type_body!=judgement_type_body:
-                time_here_s=0
-                time_here_min =0
-                time_here_hr=0
-                direction_time_start=time.time()
-                time_here=direction_time_start-time_start
-                time_here_s=int(time_here%60)
-                time_here_min = int(time_here/60)%60
-                time_here_hr=int(time_here/3600)
+            if pre_judgement_type_addmode!=judgement_type_addmode :
             
                 #頭判斷
                 if pre_judgement_type_addmode!=judgement_type_addmode:
                     if pre_judgement_type_addmode==7:#120度加分模式
                         plus_cal_120+=1
-                        print("視線平均分散："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
-                    elif pre_judgement_type_addmode==6:
-                        print("無法偵測臉部："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
-                    elif pre_judgement_type_addmode==5.2:#注視扣分，若有扣分需要分5個方向分別計算時間
-                        print("注意力分散："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
-                    elif pre_judgement_type_addmode==8:
-                        print("注視觀眾："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
                 pre_judgement_type_addmode=judgement_type_addmode
                 judgement_type_addmode=0
-        
-                # 身體判斷        
-                # if pre_judgement_type_body!=judgement_type_body :
-                
-                #     if pre_judgement_type_body==10:
-                #         print("位移適當："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
-                #     elif pre_judgement_type_body==10.1:
-                #         print("位移過快："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
-                #     elif pre_judgement_type_body==10.2:
-                #         print("長時間位移趨近於0："+str(time_here_hr)+"hr"+str(time_here_min)+"min"+str(time_here_s)+"s")
-               
-                # pre_judgement_type_body=judgement_type_body
-                # judgement_type_body=0
             
             
             start = time.time()
@@ -307,16 +350,15 @@ while cap.isOpened():
                     #把頭部轉向限制在一個框框內
                     if -6+face_y<y<12+face_y and 2.5+face_x>x>-5+face_x:
                         attention_look +=1
-                        if attention_look>=200 : #設定一個時間，注視超過5次的迴圈次數
+                        if attention_look>=200: #設定一個時間，注視超過200次的迴圈次數
+                            min_cal_atten+=1
                             judgement_type_addmode=5.2
                         elif 20>attention_look:           
                             no_atten=0#no atten 歸零
                             noface_time=0
-                            judgement_type_addmode=8
                         else:
                             plus_cal_atten+=1
-                                    
-                        cv2.putText(image, f'attention =  {round((attention_look-4)/10,0)} times', (int(20*width_ratio),int(500*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
+                        cv2.putText(image, f'attention =  {round((attention_look-4)/10,0)} times', (int(20*width_ratio),int(700*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
                     else:#沒有在取景框當中
                         no_atten+=1
                         if no_atten>20:
@@ -326,7 +368,7 @@ while cap.isOpened():
                         if no_atten>50: #如果頭部不在這個取景框中一段時間（回頭打個噴嚏之類的時間很短就不會進入這個循環，因此會繼續累積注視的次數）100數值蓋
                             judgement_type_addmode=5.2
                             min_cal_atten+=1
-                            cv2.putText(image, ' inattention too long', (int(20*width_ratio),int(500*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 2*width_ratio, (0,0,255), 2)
+                            cv2.putText(image, ' inattention too long', (int(20*width_ratio),int(700*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 2*width_ratio, (0,0,255), 2)
                          
                     if y < -4+face_y:
                         text = "Looking Left"
@@ -402,18 +444,6 @@ while cap.isOpened():
                         
                         if pre_center!=0:
                             delta_center=np.abs(center-pre_center)
-                            # print(delta_center)
-                            # if 2<delta_center<=20: 
-                            #     if fix_cal_body<=2:
-                            #         plus_cal_deltay+=1
-                            #         cv2.putText(image, 'move good', (int(20*width_ratio),int(650*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
-                            #     fix_cal_body=0
-                            
-                            # elif delta_center>2:
-                            #     fix_cal_body+=1
-                            #     cv2.putText(image, f'fix_cal_body:{(fix_cal_body)}', (int(100*width_ratio),int(650*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
-                            #     if  fix_cal_body>30:
-                            #         min_cal_fix+=1
                             if pre_delta_center!=0:
                                 acc_center = np.abs(pre_delta_center-delta_center)
                                 if acc_center > 1:
@@ -435,18 +465,7 @@ while cap.isOpened():
                 
                 fps = 1 / totalTime
                 
-                #print("FPS: ", fps)
-                #cv2.putText(image, f'basic point: {int(grade_base)}', (20,500), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0,255,0), 2)
-                # cv2.putText(image, f'minus point: {float(min_point)}', (int(20*width_ratio),int(550*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
-                # cv2.putText(image, f'plus point: {float(plus_point)}', (int(20*width_ratio),int(600*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
-                #cv2.putText(image, f'base grade: {float(grade_base)}', (int(20*width_ratio),int(500*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
                 #cv2.putText(image, f'FPS: {int(fps)}', (int(1000*width_ratio),int(700*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 1.5*width_ratio, (0,255,0), 2)
-                mp_drawing.draw_landmarks(
-                            image=image,
-                            landmark_list=face_landmarks,
-                            connections=mp_face_mesh.FACEMESH_CONTOURS,
-                            landmark_drawing_spec=drawing_spec,
-                            connection_drawing_spec=drawing_spec)
                 pre_p1=p1
                 #從noface狀態轉換到有face狀態後，計算有face維持多久，若有足夠時間，即重新計算noface_time
                 if noface_time!=0 and cc_for_haveface >= 10: 
@@ -459,8 +478,6 @@ while cap.isOpened():
                 noface_time+=1
                 no_face.append(no_face_number)
                 cv2.putText(image, "no face!!!" , (int(150*width_ratio), int(200*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 4, (138, 43, 226), 10)
-                #cv2.putText(image, "plus = 0" , (300, 200), cv2.FONT_HERSHEY_SIMPLEX, 4, (138, 43, 226), 10)
-                #cv2.putText(image, "Grade = " + str(grade/100) , (300, 350), cv2.FONT_HERSHEY_SIMPLEX, 3, (138, 43, 226), 10)
                 noface_time_end=time.time()
                 if noface_time_start!=0:
                    cv2.putText(image,"time:"+str(int(noface_time_end-noface_time_start))+"s", (int(300*width_ratio), int(500*height_ratio)), cv2.FONT_HERSHEY_SIMPLEX, 3*width_ratio, (138, 43, 226), 3)
@@ -472,8 +489,6 @@ while cap.isOpened():
             if noface_time>30:
                 cal_noface+=1
                 judgement_type_addmode=6
-                # min_for_noface += 0.01
-                # min_for_noface = round(min_for_noface, 3)   
                 cv2.putText(image,"no face too long!!", (int(100*width_ratio),int(300*height_ratio)),cv2.FONT_HERSHEY_SIMPLEX, 4*width_ratio, (138, 42, 226), 3)
             
             # if cc%10==0:
@@ -494,12 +509,16 @@ while cap.isOpened():
         
             #判斷基本分
              #total=num1+num2+num3+num4+num5+no_face_number
-            if num5/cc>=7/10:
-                grade_base = '合格'
+            
+            if num5+num2>num1 and num2+num1>num5 and num5+num1>num2 and (num5+num2+num1)/cc>=7/10:
+                beauty = '有'#圓餅圖漂亮與否
             else:
-               grade_base = '不合格'
-           
-  
+                beauty = '無'
+                
+            if num5/cc>=7/10:#是否只盯著前方的觀眾
+                grade_base = '有'
+            else :
+                grade_base = '無'
 XX_angle = pd.DataFrame(X_angle)
 YY_angle = pd.DataFrame(Y_angle)
 XY_angle = pd.DataFrame(XX_angle)
