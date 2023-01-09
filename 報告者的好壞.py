@@ -29,9 +29,10 @@ drawing_spec = mp_drawing.DrawingSpec(thickness=1, circle_radius=1)#繪圖參數
 
 #cap = cv2.VideoCapture(1)
 #cap = cv2.VideoCapture('/Users/bingjun/Downloads/690566674.058419.mp4')
-#cap = cv2.VideoCapture('C:/Users/to4/Desktop/111-1/hf/vidio/IMG_9422.mp4')
-cap = cv2.VideoCapture('/C:/Users/to4/Desktop/111-1/hf/vidio/690566673.976856.mp4')
-#cap = cv2.VideoCapture('C:/Users/to4/Desktop/111-1/hf/vidio/1.mp4')
+cap = cv2.VideoCapture('C:/Users/to4/Desktop/111-1/hf/vidio/690566674.058419.mp4')
+#cap = cv2.VideoCapture('C:/Users/to4/Desktop/111-1/hf/vidio/690566674.225508.mp4')
+#cap = cv2.VideoCapture('/C:/Users/to4/Desktop/111-1/hf/vidio/690566673.976856.mp4')
+#cap = cv2.VideoCapture('C:/Users/to4/Desktop/111-1/hf/vidio/690566673.898166.mp4')
 
 
 turn_right = []
